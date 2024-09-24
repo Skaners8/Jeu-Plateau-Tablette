@@ -1,1 +1,3 @@
-DEVLOG #2: Création d'un repository GitHub, un Template de jeu 2D Mobile, ainsi que l'ajout de package "ParrelSync", "MultiplayerSamplesCoop"
+DEVLOG #2: 
+- Création d'un repository GitHub, un Template de jeu 2D Mobile, ainsi que l'ajout de package "ParrelSync", "MultiplayerSamplesCoop".
+- Changement de la version d'Unity vers "2023.2.20f1" pour utiliser "Multiplayer Mod".
