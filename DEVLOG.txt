@@ -1,1 +1,1 @@
-DEVLOG #2: Création d'un repository GitHub, un Template de jeu 2D Mobile, ainsi que l'ajoute de package "ParrelSync", "MultiplayerSamplesCoop"
+DEVLOG #2: Création d'un repository GitHub, un Template de jeu 2D Mobile, ainsi que l'ajout de package "ParrelSync", "MultiplayerSamplesCoop"
