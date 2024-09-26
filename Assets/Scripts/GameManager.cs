@@ -28,11 +28,13 @@ public class GameManager : MonoBehaviour
     {
         foreach (Planet planet in planets)
         {
-            int resources = planet.GetResourcesAtTurnStart();
-            if (resources > 0)
+            List<Planet.ResourceType> resources = planet.GetResourcesAtTurnStart(); // Récupère la liste des ressources
+            int resourceCount = resources.Count; // Compte le nombre de ressources
+
+            if (resourceCount > 0)
             {
-                Debug.Log("Player receives " + resources + " resources from planet.");
-                // Update player resource count
+                Debug.Log("Player receives " + resourceCount + " resources from planet.");
+                // Mise à jour des ressources du joueur ici
             }
         }
     }

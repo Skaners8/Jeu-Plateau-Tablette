@@ -3,19 +3,18 @@ using UnityEngine;
 
 public class Planet : MonoBehaviour
 {
-    public enum ResourceType { None, Resource1, Resource2 }
+    public enum ResourceType { None, Food, Minerals }
     public bool isDiscovered = false;
     public bool isColonized = false;
     public int colonizationPoints = 10;
-    public ResourceType resourceType;
+    public List<ResourceType> resourceTypes = new List<ResourceType>(); // Liste des ressources produites par la planète
     public int resourcesProduced = 0; // 0, 1, or 2
-
     public List<GameObject> shipsOnPlanet = new List<GameObject>();
 
     private void Start()
     {
-        // Randomize resource production (can be 0, 1, or 2)
-        resourcesProduced = Random.Range(0, 3); 
+        // Le nombre de ressources est toujours tiré aléatoirement entre 0 et 2
+        resourcesProduced = Random.Range(0, 3);
     }
 
     public void VisitPlanet(GameObject ship)
@@ -30,41 +29,46 @@ public class Planet : MonoBehaviour
     private void DiscoverPlanet()
     {
         isDiscovered = true;
-        // Trigger visual update to show the planet
+
+        // Faire le tirage pour les ressources de la planète (une seule fois lors de la découverte)
+        for (int i = 0; i < resourcesProduced; i++)
+        {
+            if (Random.value > 0.5f)
+            {
+                resourceTypes.Add(ResourceType.Food); // 50% de chance d'ajouter de la nourriture
+            }
+            else
+            {
+                resourceTypes.Add(ResourceType.Minerals); // 50% de chance d'ajouter des minerais
+            }
+        }
+
+        // Trigger visuel pour montrer que la planète est découverte
     }
 
     public bool CanCollectResources(GameObject ship)
     {
-        // Resource collection requires a large ship (you can add a check for ship size here)
         return isDiscovered && shipsOnPlanet.Contains(ship) && !isColonized;
     }
 
     public bool CanColonize()
     {
-        // Requires 2 large ships on the planet
         return shipsOnPlanet.Count >= 2 && !isColonized;
     }
 
     public void ColonizePlanet()
     {
         isColonized = true;
-        // Award points for colonization
         GameManager.Instance.AddPoints(colonizationPoints);
-        // Trigger visual update for the colonized planet (e.g., build a tower)
+        // Mise à jour visuelle pour montrer la colonisation
     }
 
-    public int GetResourcesAtTurnStart()
+    public List<ResourceType> GetResourcesAtTurnStart()
     {
         if (isColonized)
         {
-            return resourcesProduced; // Give resources at the start of the turn
+            return resourceTypes; // Le joueur récupère les ressources tirées à chaque tour
         }
-        return 0;
-    }
-
-    // Méthode publique pour vérifier si la planète est découverte
-    public bool IsPlanetDiscovered()
-    {
-        return isDiscovered;
+        return new List<ResourceType>(); // Pas de ressources si la planète n'est pas colonisée
     }
 }
