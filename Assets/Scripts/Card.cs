@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI; // Pour utiliser Image
 using DG.Tweening;
 
 public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandler, IPointerDownHandler, IPointerUpHandler
@@ -14,17 +15,41 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
     public float clickDurationThreshold = 0.2f; // Durée pour distinguer le clic soutenu
     private bool clickValid = true; // Variable pour vérifier si le clic est valide (clic rapide)
 
+    // Référence au GameObject enfant pour la représentation visuelle
+    public GameObject visualChild;
+
+    // Ajouter les sprites pour le recto et le verso
+    public Sprite rectoSprite;  // Image du recto
+    public Sprite versoSprite;  // Image du verso
+    private Image imageComponent; // Le composant Image de l'enfant visuel
+
     private void Start()
     {
         // Sauvegarder la position locale d'origine
         originalParent = transform.parent;
         originalPosition = transform.localPosition;
+
+        // Récupérer le composant Image sur l'enfant visuel
+        imageComponent = visualChild.GetComponent<Image>();
+
+        // Vérification pour s'assurer que l'image est bien assignée
+        if (imageComponent == null)
+        {
+            Debug.LogError("L'Image est manquante sur l'enfant visuel: " + visualChild.name);
+            return;
+        }
+
+        // Assurer que l'image du recto est visible au départ
+        imageComponent.sprite = rectoSprite;
+
+        // S'assurer que les raycasts sont activés pour permettre l'interaction
+        imageComponent.raycastTarget = true;
     }
 
     // Gère le déplacement de la carte quand on commence à la faire glisser
     public void OnBeginDrag(PointerEventData eventData)
     {
-        if (!clickValid) return;
+        if (!clickValid) return; // Vérifie si le clic est valide
 
         isDragging = true; // Commence le drag
         offset = transform.position - Camera.main.ScreenToWorldPoint(eventData.position);
@@ -44,14 +69,12 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
     {
         isDragging = false; // Fin du drag
 
-        // Si la carte n'est pas sélectionnée, elle retourne à la position (0,0) dans son parent
         if (!isSelected)
         {
             transform.DOLocalMove(Vector3.zero, 0.5f); // Retourner à (0,0) en 0.5 seconde
         }
         else
         {
-            // Si la carte est sélectionnée, elle retourne à sa position actuelle avec la montée
             transform.DOLocalMove(originalPosition + new Vector3(0, 0.75f, 0), 0.5f); // Retourner à la position avec la montée
         }
     }
@@ -59,8 +82,8 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
     // Gère la sélection, désélection et le retournement de la carte lors du clic
     public void OnPointerDown(PointerEventData eventData)
     {
-        clickTime = Time.time; // Sauvegarder le moment où on a cliqué
-        clickValid = true; // Par défaut, le clic est valide
+        clickTime = Time.time;
+        clickValid = true;
     }
 
     // Gère ce qu'il se passe quand on relâche la souris après un clic ou un drag
@@ -68,32 +91,35 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
     {
         if (Time.time - clickTime < clickDurationThreshold && !isDragging)
         {
-            // Si c'est un clic rapide et pas un drag, on fait monter ou descendre la carte
             if (!isSelected)
             {
-                // Sélectionne la carte (monte légèrement)
-                transform.DOLocalMoveY(originalPosition.y + 0.75f, 0.2f); // Monte de 0.75 unités sur l'axe Y
+                transform.DOLocalMoveY(originalPosition.y + 0.75f, 0.2f);
                 isSelected = true;
             }
             else
             {
-                // Désélectionne la carte (retour à la position d'origine)
                 transform.DOLocalMove(originalPosition, 0.2f);
                 isSelected = false;
             }
 
-            // Gérer le retournement de la carte
+            // Gérer le retournement de l'enfant visuel uniquement
             if (!isFlipped)
             {
-                // Si la carte est actuellement face recto, on la retourne vers le verso
-                transform.DORotate(new Vector3(0, 180, 0), 0.5f); // Rotation sur l'axe Y en 0.5 seconde
-                isFlipped = true; // Marquer la carte comme retournée
+                visualChild.transform.DORotate(new Vector3(0, 90, 0), 0.25f).OnComplete(() =>
+                {
+                    imageComponent.sprite = versoSprite;
+                    visualChild.transform.DORotate(new Vector3(0, 180, 0), 0.25f);
+                });
+                isFlipped = true;
             }
             else
             {
-                // Si la carte est face verso, on la retourne vers le recto
-                transform.DORotate(new Vector3(0, 0, 0), 0.5f); // Retour à l'angle d'origine sur l'axe Y
-                isFlipped = false; // Marquer la carte comme non retournée
+                visualChild.transform.DORotate(new Vector3(0, 90, 0), 0.25f).OnComplete(() =>
+                {
+                    imageComponent.sprite = rectoSprite;
+                    visualChild.transform.DORotate(new Vector3(0, 0, 0), 0.25f);
+                });
+                isFlipped = false;
             }
         }
         else
@@ -101,6 +127,6 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
             clickValid = false; // Invalide le clic si c'était un drag
         }
 
-        isDragging = false; // Réinitialiser la variable de drag
+        isDragging = false;
     }
 }
