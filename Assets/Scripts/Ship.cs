@@ -32,8 +32,10 @@ public class Ship : MonoBehaviour
     private void CollectResources(Planet planet)
     {
         // Simuler la collecte de ressources
-        actionPoints--;
-        Debug.Log("Resources collected from planet.");
+        if (isLargeShip == true){
+            actionPoints--;
+            Debug.Log("Resources collected from planet.");
+        }
     }
 
     public void AttemptColonization(Planet planet)

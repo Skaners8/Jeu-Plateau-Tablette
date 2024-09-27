@@ -1,123 +1,144 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;  // Assuming you're using Unity's UI system
+using UnityEngine.UI;
 
 public class PlayerActions : MonoBehaviour
 {
+    // Variables pour les ressources, les vaisseaux, et les planètes
     public int resources;
     public int food;
     public int minerals;
-    public int shipCount;    // Number of normal ships
-    public int largeShipCount; // Number of large ships
-    public int planetCount;  // Number of colonized planets
-    public int turnCount = 0; // Number of turns elapsed
+    public int shipCount;
+    public int largeShipCount;
+    public int planetCount;
+    public int turnCount = 0;
 
-    public Button normalToLargeUpgradeButton;  // UI Button to upgrade normal ships to large ships
-    public Button largeToTowerUpgradeButton;   // UI Button to upgrade large ships to tower for colonization
+    // Boutons UI pour les améliorations
+    public Button normalToLargeUpgradeButton;
+    public Button largeToTowerUpgradeButton;
+    public Button createShipButton; // Nouveau bouton pour créer un vaisseau
 
-    // Call this method each time ship count changes to update UI buttons
-    public void UpdateUpgradeButtons()
+    // Préfabriqués pour les vaisseaux et les tours
+    public GameObject normalShipPrefab;
+    public GameObject largeShipPrefab;
+    public GameObject towerPrefab;
+
+    // Localisation des vaisseaux sur les planètes
+    public Dictionary<int, int> smallShipLocations = new Dictionary<int, int>();
+    public Dictionary<int, int> largeShipLocations = new Dictionary<int, int>();
+
+    // Planète de départ du joueur
+    public int startingPlanetId = 0; // Planète de départ par défaut
+
+    void Start()
     {
-        // Check if player has at least 2 normal ships to enable upgrade to large ship
-        normalToLargeUpgradeButton.interactable = shipCount >= 2;
+        // Désactiver les boutons d'amélioration au départ
+        normalToLargeUpgradeButton.gameObject.SetActive(false);
+        largeToTowerUpgradeButton.gameObject.SetActive(false);
+        // Désactiver le bouton de création de vaisseau au départ
+        createShipButton.gameObject.SetActive(false);
 
-        // Check if player has at least 2 large ships to enable upgrade to tower
-        largeToTowerUpgradeButton.interactable = largeShipCount >= 2;
+        // Ajouter les listeners pour les boutons d'amélioration
+        createShipButton.onClick.AddListener(() => CreateNormalShip(startingPlanetId));
+        normalToLargeUpgradeButton.onClick.AddListener(() => UpgradeToLargeShip());
+        largeToTowerUpgradeButton.onClick.AddListener(() => UpgradeToTower());
     }
 
-    // Collect resources from colonized planets
-    public void CollectResourcesFromPlanets()
+    void Update()
     {
-        int resourcesCollected = planetCount * 10; // Example: 10 resources per planet
-        resources += resourcesCollected;
-        minerals += resourcesCollected / 2;  // Assume 50% minerals
-        food += resourcesCollected / 2;      // Assume 50% food
-        Debug.Log("Resources collected from planets: " + resourcesCollected);
-        Debug.Log("Food: " + food + ", Minerals: " + minerals);
+        // Activer le bouton de création de vaisseau si assez de ressources
+        createShipButton.gameObject.SetActive(minerals >= 3 && food >= 3);
+        // Mettre à jour les boutons d'amélioration
+        UpdateUpgradeButtons(startingPlanetId);
     }
 
-    // Create a normal ship for 3 minerals and 3 food
-    public void CreateNormalShip()
+    // Création d'un vaisseau normal avec 3 minerais et 3 nourritures
+    public void CreateNormalShip(int planetId)
     {
         if (minerals >= 3 && food >= 3)
         {
             minerals -= 3;
             food -= 3;
             shipCount++;
-            Debug.Log("Normal ship created.");
-            Debug.Log("Remaining food: " + food + ", Remaining minerals: " + minerals);
-
-            // Update UI buttons after creating a ship
-            UpdateUpgradeButtons();
+            // Ajouter le vaisseau à la localisation de la planète
+            if (!smallShipLocations.ContainsKey(planetId))
+                smallShipLocations[planetId] = 0;
+            smallShipLocations[planetId]++;
+            // Instancier le vaisseau sur la planète de départ
+            Instantiate(normalShipPrefab, GetPlanetPosition(planetId), Quaternion.identity);
+            Debug.Log("Vaisseau normal créé à la planète de départ.");
         }
         else
         {
-            Debug.Log("Not enough minerals or food to create a ship.");
+            Debug.Log("Pas assez de minerais ou de nourriture.");
         }
     }
 
-    // Upgrade 2 normal ships to create a large ship
+    // Mise à jour des boutons d'amélioration en fonction des vaisseaux présents sur la planète
+    public void UpdateUpgradeButtons(int planetId)
+    {
+        // Activer le bouton si le joueur possède au moins 2 vaisseaux normaux au total
+        int totalSmallShips = 0;
+        foreach (int shipCount in smallShipLocations.Values)
+        {
+            totalSmallShips += shipCount;
+        }
+        normalToLargeUpgradeButton.gameObject.SetActive(totalSmallShips >= 2);
+        largeToTowerUpgradeButton.gameObject.SetActive(largeShipCount >= 2); // Exemple pour activer le bouton de tour
+    }
+
     public void UpgradeToLargeShip()
     {
-        if (shipCount >= 2)
+        // Vérifier si le joueur a au moins 2 vaisseaux normaux
+        int totalSmallShips = 0;
+        foreach (int shipCount in smallShipLocations.Values)
         {
+            totalSmallShips += shipCount;
+        }
+        if (totalSmallShips >= 2)
+        {
+            // Supprimer 2 vaisseaux normaux
+            foreach (int planetId in new List<int>(smallShipLocations.Keys))
+            {
+                if (smallShipLocations[planetId] > 0)
+                {
+                    int shipsToRemove = Mathf.Min(2, smallShipLocations[planetId]);
+                    smallShipLocations[planetId] -= shipsToRemove;
+                    totalSmallShips -= shipsToRemove;
+                    if (totalSmallShips < 2) break;
+                }
+            }
             shipCount -= 2;
             largeShipCount++;
-            Debug.Log("Large ship created.");
-
-            // Update UI buttons after upgrading
-            UpdateUpgradeButtons();
+            // Créer un gros vaisseau sur la planète de départ
+            Instantiate(largeShipPrefab, GetPlanetPosition(startingPlanetId), Quaternion.identity);
+            Debug.Log("Amélioration effectuée : Gros vaisseau créé.");
+            // Mettre à jour les boutons d'amélioration
+            UpdateUpgradeButtons(startingPlanetId);
         }
         else
         {
-            Debug.Log("Not enough normal ships to create a large ship.");
+            Debug.Log("Pas assez de vaisseaux normaux pour l'amélioration.");
         }
     }
 
-    // Upgrade 2 large ships to create a tower and colonize the planet
-    public void CreateTowerToColonize()
+    public void UpgradeToTower()
     {
-        if (largeShipCount >= 2)
-        {
-            largeShipCount -= 2;
-            planetCount++;
-            Debug.Log("Tower created, planet colonized.");
-
-            // Update UI buttons after colonization
-            UpdateUpgradeButtons();
-        }
-        else
-        {
-            Debug.Log("Not enough large ships to create a tower.");
-        }
+        // Logique pour améliorer un gros vaisseau en tour
+        // Ajoute la logique ici selon tes besoins
+        Debug.Log("Amélioration effectuée : Tour créée.");
     }
 
-    // Move a ship to a new position
-    public void MoveShip(Vector3 newPosition)
+    // Fonction pour obtenir la position de la planète
+    private Vector3 GetPlanetPosition(int planetId)
     {
-        if (shipCount > 0)
-        {
-            // Ship movement code here
-            Debug.Log("Ship moved to " + newPosition);
-        }
-        else
-        {
-            Debug.Log("No available ships to move.");
-        }
+        return new Vector3(planetId * 2, 0, 0); // Modifier selon ta logique
     }
 
-    // Function to handle end of turn
-    public void EndTurn()
+    // Vérifier si une planète est colonisée
+    private bool IsPlanetColonized(int planetId)
     {
-        turnCount++;
-        Debug.Log("Turn ended. Number of turns: " + turnCount);
-    }
-
-    // Call at the start of each turn
-    public void StartTurn()
-    {
-        CollectResourcesFromPlanets();
-        Debug.Log("Start of turn " + turnCount);
+        return planetCount > planetId; // Logique simplifiée
     }
 }
