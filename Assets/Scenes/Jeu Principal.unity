@@ -658,8 +658,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   resources: 0
-  food: 0
-  minerals: 0
+  food: 6
+  minerals: 6
   shipCount: 0
   largeShipCount: 0
   planetCount: 0
