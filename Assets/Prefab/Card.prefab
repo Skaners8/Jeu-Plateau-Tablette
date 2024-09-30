@@ -369,32 +369,13 @@ MonoBehaviour:
   visibleCard: {fileID: 3102016085767430457}
   rectoImage: {fileID: 6707133531648547807}
   versoImage: {fileID: 494709473047484164}
-  tiltAmount: 80
-  tiltDamping: 10
-  tiltCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
+  tiltAmount: 50
+  oscillatorVelocity: 0
+  spring: 250
+  damp: 30
+  velocityThreshold: 0.01
+  tiltDamping: 3
+  velocityMultiplier: 2.5
   shadowScript: {fileID: 7984072986508934431}
   discardZoneRectTransform: {fileID: 1379764473366939062, guid: 6ef30b4d485557b48b5697904a73ed01, type: 3}
   deckManager: {fileID: 6788576849579136321, guid: a8a805509b99a3a4a95d44fec546046f, type: 3}

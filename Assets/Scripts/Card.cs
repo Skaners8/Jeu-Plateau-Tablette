@@ -1,6 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UI; // Pour utiliser Image
+using UnityEngine.UI; // For Image component
 using DG.Tweening;
 
 public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandler, IPointerDownHandler, IPointerUpHandler
@@ -9,61 +9,49 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
     private Vector3 originalPosition;
     public bool isSelected = false;
     public bool isDragging = false;
-    public bool isFlipped = false; // Indique si la carte est retournée
-    public float clickTime = 0f; // Temps de début du clic
-    public float clickDurationThreshold = 0.2f; // Durée pour distinguer le clic soutenu
-    private bool clickValid = true; // Variable pour vérifier si le clic est valide (clic rapide)
+    public bool isFlipped = false;
+    public float clickTime = 0f;
+    public float clickDurationThreshold = 0.2f;
+    private bool clickValid = true;
 
-    // Référence au GameObject visible et invisible
-    public GameObject invisibleCard; // La carte qui gère les interactions (invisible)
-    public GameObject visibleCard;   // La carte visible avec les images et animations
+    public GameObject invisibleCard;
+    public GameObject visibleCard;
 
-    // Ajouter les `Image` pour le recto et le verso
-    public Image rectoImage;  // Image du recto
-    public Image versoImage;  // Image du verso
-    private Image visibleImage; // Le composant Image de la carte visible
+    public Image rectoImage;
+    public Image versoImage;
+    private Image visibleImage;
     private Vector3 lastPosition;
-    public float tiltAmount = 40f; // Angle maximum de tangage
     private float originalZPosition;
 
-    // Inertie pour le tangage
-    private float currentTiltAngle = 0f; // Angle de tangage actuel
-    private float tiltVelocity = 0f;     // Vitesse du tangage
-    public float tiltDamping = 5f;       // Taux de ralentissement de l'inertie
-
-    // Pour stocker la vitesse de la carte
-    private float cardSpeedX = 0f;
-
-    // Courbe pour fluidifier le mouvement de tangage
-    public AnimationCurve tiltCurve = AnimationCurve.EaseInOut(0, 0, 1, 1); // Courbe d'animation par défaut
+    // Tilt and oscillation parameters
+    public float tiltAmount = 40f;
+    public float oscillatorVelocity = 0f;
+    private float displacement = 0f;
+    public float spring = 150f;
+    public float damp = 20f; // Increase damping to stop oscillation faster
+    public float velocityThreshold = 0.01f; // Minimum velocity to stop oscillation
+    public float tiltDamping = 5f;
+    public float velocityMultiplier = 2f;
 
     public Shadow shadowScript;
+    public RectTransform discardZoneRectTransform;
+    public DeckManager deckManager;
+    public bool isInDiscardZone = false;
 
-    // Discard Zone reference
-    public RectTransform discardZoneRectTransform; // Reference to the RectTransform of the discard zone
-    public DeckManager deckManager; // Référence au deck pour piocher une nouvelle carte
-    public bool isInDiscardZone = false; // Variable pour savoir si la carte est dans la zone de discard
-
+    private bool isMovingToSlot = false; // New flag to control slot movement
 
     private void Start()
     {
-        // Sauvegarder la position locale d'origine du parent
         originalPosition = visibleCard.transform.localPosition;
-
-        // Récupérer le composant Image sur l'enfant visible
         visibleImage = visibleCard.GetComponent<Image>();
 
-        // Vérification pour s'assurer que l'image est bien assignée
         if (visibleImage == null)
         {
             Debug.LogError("L'Image est manquante sur l'enfant visible: " + visibleCard.name);
             return;
         }
 
-        // Assurer que l'image du recto est visible au départ
         visibleImage.sprite = rectoImage.sprite;
-
-        // Sauvegarder la position Z originale de la carte visible
         originalZPosition = visibleCard.transform.position.z;
     }
 
@@ -73,36 +61,27 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
 
         isDragging = true;
         offset = visibleCard.transform.position - Camera.main.ScreenToWorldPoint(eventData.position);
-
-        // Faire passer la carte visible au-dessus en augmentant l'axe Z
         Vector3 newPosition = visibleCard.transform.position;
-        newPosition.z = 10; // Amène la carte visible devant les autres
+        newPosition.z = 10;
         visibleCard.transform.position = newPosition;
-
-        lastPosition = visibleCard.transform.position; // Initialiser la position pour le calcul du tangage
-       
-
+        lastPosition = visibleCard.transform.position;
     }
 
     public void OnDrag(PointerEventData eventData)
     {
         if (!isDragging) return;
 
+        // Handle the card's position update
         Vector3 newPos = Camera.main.ScreenToWorldPoint(eventData.position) + offset;
-        newPos.z = 10; // Garder la carte visible au premier plan pendant le drag
+        newPos.z = 10;
         visibleCard.transform.position = newPos;
 
-        // Calculer la vitesse de déplacement sur l'axe X
-        cardSpeedX = (visibleCard.transform.position.x - lastPosition.x) / Time.deltaTime;
+        // Update the tilt based on movement speed, but don't affect position
+        float cardSpeedX = (visibleCard.transform.position.x - lastPosition.x) / Time.deltaTime;
+        oscillatorVelocity -= cardSpeedX * velocityMultiplier; // Reversed tilt direction
 
-        // Appliquer un tangage inversé basé sur la vitesse de la carte avec courbe
-        float t = Mathf.Clamp01(Mathf.Abs(cardSpeedX) / tiltAmount); // Normaliser la vitesse pour l'utiliser dans la courbe
-        float rotationZ = Mathf.Clamp(-cardSpeedX * tiltCurve.Evaluate(t) * 0.1f, -tiltAmount, tiltAmount); // Utiliser la courbe pour fluidifier le tangage
-        visibleCard.transform.rotation = Quaternion.Euler(0, 0, rotationZ);
+        lastPosition = visibleCard.transform.position;
 
-        lastPosition = visibleCard.transform.position; // Mettre à jour la dernière position
-
-        // Check if the card is inside the discard zone
         if (RectTransformUtility.RectangleContainsScreenPoint(discardZoneRectTransform, eventData.position, Camera.main))
         {
             isInDiscardZone = true;
@@ -113,59 +92,37 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
         }
     }
 
-    public void OnEndDrag(PointerEventData eventData)
+ private void Update()
     {
-        isDragging = false;
+        // Handle oscillator rotation for tilt independently of dragging
+        float force = -spring * displacement - damp * oscillatorVelocity;
+        oscillatorVelocity += force * Time.deltaTime;
+        displacement += oscillatorVelocity * Time.deltaTime;
 
-        // Vérifie si la carte est dans la zone de discard
-        if (isInDiscardZone)
-        {
-            DiscardCard();  // Si oui, appelle la méthode pour défausser la carte
-        }
-        else
-        {
-            // Retourne la carte à sa position initiale si elle n'est pas dans la zone de discard
-            if (!isSelected)
-            {
-                visibleCard.transform.DOLocalMove(Vector3.zero, 0.5f);
-            }
-            else
-            {
-                visibleCard.transform.DOLocalMove(originalPosition + new Vector3(0, 0.75f, 0), 0.5f);
-            }
+        // Clamp tilt rotation
+        float rotationZ = Mathf.Clamp(displacement, -tiltAmount, tiltAmount);
+        visibleCard.transform.rotation = Quaternion.Euler(0, 0, rotationZ);
 
-            // Remettre la carte visible à sa position Z originale
-            Vector3 newPosition = visibleCard.transform.position;
-            newPosition.z = originalZPosition;
-            visibleCard.transform.position = newPosition;
+        // Check if the velocity is below the threshold, stop the oscillation
+        if (Mathf.Abs(oscillatorVelocity) < velocityThreshold)
+        {
+            oscillatorVelocity = 0f; // Stop oscillation
+            displacement = 0f;
         }
     }
 
 
-
-    private void Update()
-    {
-        // Appliquer l'inertie au tangage après le drag
-        if (!isDragging && Mathf.Abs(cardSpeedX) > 0.01f)
-        {
-            // Lissage de la rotation avec une inertie
-            cardSpeedX = Mathf.SmoothDamp(cardSpeedX, 0, ref tiltVelocity, tiltDamping * Time.deltaTime);
-            float t = Mathf.Clamp01(Mathf.Abs(cardSpeedX) / tiltAmount); // Normaliser la vitesse pour la courbe
-            float rotationZ = Mathf.Clamp(-cardSpeedX * tiltCurve.Evaluate(t) * 0.1f, -tiltAmount, tiltAmount); // Appliquer l'inertie avec la courbe
-            visibleCard.transform.rotation = Quaternion.Euler(0, 0, rotationZ);
-        }
-    }
-
-    // Gère la sélection, désélection et le retournement de la carte lors du clic
     public void OnPointerDown(PointerEventData eventData)
     {
+        if (isMovingToSlot) return; // Prevent interaction during slot movement
         clickTime = Time.time;
         clickValid = true;
     }
 
-    // Gère ce qu'il se passe quand on relâche la souris après un clic ou un drag
     public void OnPointerUp(PointerEventData eventData)
     {
+        if (isMovingToSlot) return; // Prevent interaction during slot movement
+
         if (Time.time - clickTime < clickDurationThreshold && !isDragging)
         {
             if (!isSelected)
@@ -179,14 +136,21 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
                 isSelected = false;
             }
 
-            // Gérer le retournement avec l'animation de mise à l'échelle (tangage inclus)
+            // Temporarily disable interaction during flip
+            this.enabled = false;
+
+            // Handle card flipping
             if (!isFlipped)
             {
                 visibleCard.transform.DOScaleX(visibleCard.transform.localScale.x * 0.1f, 0.25f).OnComplete(() =>
                 {
-                    visibleImage.sprite = versoImage.sprite; // Changer vers l'image du verso
-                    visibleImage.raycastTarget = true; // S'assurer que le raycast reste actif
-                    visibleCard.transform.DOScaleX(visibleCard.transform.localScale.x * 10f, 0.25f); // Revenir à la taille normale
+                    visibleImage.sprite = versoImage.sprite;
+                    visibleImage.raycastTarget = true;
+                    visibleCard.transform.DOScaleX(visibleCard.transform.localScale.x * 10f, 0.25f).OnComplete(() =>
+                    {
+                        // Re-enable interaction after flip
+                        this.enabled = true;
+                    });
                 });
                 isFlipped = true;
             }
@@ -194,31 +158,70 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
             {
                 visibleCard.transform.DOScaleX(visibleCard.transform.localScale.x * 0.1f, 0.25f).OnComplete(() =>
                 {
-                    visibleImage.sprite = rectoImage.sprite; // Changer vers l'image du recto
-                    visibleImage.raycastTarget = true; // S'assurer que le raycast reste actif
-                    visibleCard.transform.DOScaleX(visibleCard.transform.localScale.x * 10f, 0.25f); // Revenir à la taille normale
+                    visibleImage.sprite = rectoImage.sprite;
+                    visibleImage.raycastTarget = true;
+                    visibleCard.transform.DOScaleX(visibleCard.transform.localScale.x * 10f, 0.25f).OnComplete(() =>
+                    {
+                        // Re-enable interaction after flip
+                        this.enabled = true;
+                    });
                 });
                 isFlipped = false;
             }
         }
         else
         {
-            clickValid = false; // Invalide le clic si c'était un drag
+            clickValid = false;
         }
 
         isDragging = false;
     }
-    // Méthode appelée lorsque la carte est défaussée
+
+    public void OnEndDrag(PointerEventData eventData)
+    {
+        isDragging = false;
+
+        if (isInDiscardZone)
+        {
+            DiscardCard();
+        }
+        else
+        {
+            if (!isSelected)
+            {
+                visibleCard.transform.DOLocalMove(Vector3.zero, 0.5f);
+            }
+            else
+            {
+                visibleCard.transform.DOLocalMove(originalPosition + new Vector3(0, 0.75f, 0), 0.5f);
+            }
+
+            Vector3 newPosition = visibleCard.transform.position;
+            newPosition.z = originalZPosition;
+            visibleCard.transform.position = newPosition;
+        }
+    }
+
     public void DiscardCard()
     {
-        // Perform discard animation or actions
         visibleCard.transform.DOScale(Vector3.zero, 0.5f).OnComplete(() =>
         {
-            // Deactivate the current card after the discard animation
             gameObject.SetActive(false);
+            deckManager.DrawNewCard(this.transform.parent);
+        });
+    }
 
-            // Notify the DeckManager to draw a new card and place it in the same parent
-            deckManager.DrawNewCard(this.transform.parent); // Pass the parent to the deck manager
+// Method to start card movement with tilt even when not dragging
+    public void MoveCardToPosition(Vector3 targetPosition)
+    {
+        lastPosition = visibleCard.transform.position;
+
+        // Use DOTween to smoothly move the card, but leave tilt to Update
+        visibleCard.transform.DOMove(targetPosition, 0.8f).OnUpdate(() =>
+        {
+            float cardSpeedX = (visibleCard.transform.position.x - lastPosition.x) / Time.deltaTime;
+            oscillatorVelocity -= cardSpeedX * velocityMultiplier;
+            lastPosition = visibleCard.transform.position;
         });
     }
 

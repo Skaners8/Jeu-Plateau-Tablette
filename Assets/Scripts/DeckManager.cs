@@ -17,6 +17,14 @@ public class DeckManager : MonoBehaviour
 
         // Set the card as a child of the target parent
         newCard.transform.SetParent(targetParent);
+        
+
+        // Animate the card moving from the deck to its target position (slot)
+        newCard.transform.DOMove(targetParent.position, 0.2f).OnComplete(() =>
+        {
+            // Ensure the card's local position is correct after animation
+            newCard.transform.localPosition = Vector3.zero; // Reset to local zero in the target parent
+        });
 
         // Reset the local scale of the new card to ensure it appears at the correct size
         newCard.transform.localScale = Vector3.one;
@@ -28,11 +36,7 @@ public class DeckManager : MonoBehaviour
         newCardScript.discardZoneRectTransform = discardZoneRectTransform;
         newCardScript.deckManager = this; // Assign the deck manager reference
 
-        // Animate the card moving from the deck to its final position
-        newCard.transform.DOMove(targetParent.position, 0.5f).OnComplete(() =>
-        {
-            // Ensure the card is positioned correctly
-            newCard.transform.localPosition = Vector3.zero;
-        });
+        // Use the MoveCardToPosition method to move the card and apply oscillation during the move
+        newCardScript.MoveCardToPosition(targetParent.position);
     }
 }
