@@ -577,10 +577,10 @@ MonoBehaviour:
   tiltAmount: 50
   oscillatorVelocity: 0
   spring: 250
-  damp: 30
+  damp: 35
   velocityThreshold: 0.01
   tiltDamping: 3
-  velocityMultiplier: 2.5
+  velocityMultiplier: 1
   shadowScript: {fileID: 1256921579030599559}
   discardZoneRectTransform: {fileID: 0}
   deckManager: {fileID: 0}

@@ -286,7 +286,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4268847049432134867, guid: 1ecfb01f7471ddf40bacfc7dde2d88de, type: 3}
       propertyPath: damp
-      value: 50
+      value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 4268847049432134867, guid: 1ecfb01f7471ddf40bacfc7dde2d88de, type: 3}
+      propertyPath: spring
+      value: 250
       objectReference: {fileID: 0}
     - target: {fileID: 4268847049432134867, guid: 1ecfb01f7471ddf40bacfc7dde2d88de, type: 3}
       propertyPath: deckManager
@@ -1003,9 +1007,17 @@ PrefabInstance:
       value: 50
       objectReference: {fileID: 0}
     - target: {fileID: 4268847049432134867, guid: 1ecfb01f7471ddf40bacfc7dde2d88de, type: 3}
+      propertyPath: spring
+      value: 350
+      objectReference: {fileID: 0}
+    - target: {fileID: 4268847049432134867, guid: 1ecfb01f7471ddf40bacfc7dde2d88de, type: 3}
       propertyPath: deckManager
       value: 
       objectReference: {fileID: 1552539252}
+    - target: {fileID: 4268847049432134867, guid: 1ecfb01f7471ddf40bacfc7dde2d88de, type: 3}
+      propertyPath: tiltDamping
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 4268847049432134867, guid: 1ecfb01f7471ddf40bacfc7dde2d88de, type: 3}
       propertyPath: discardZoneRectTransform
       value: 
