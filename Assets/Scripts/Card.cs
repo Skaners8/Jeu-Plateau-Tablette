@@ -37,6 +37,14 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
     // Courbe pour fluidifier le mouvement de tangage
     public AnimationCurve tiltCurve = AnimationCurve.EaseInOut(0, 0, 1, 1); // Courbe d'animation par défaut
 
+    public Shadow shadowScript;
+
+    // Discard Zone reference
+    public RectTransform discardZoneRectTransform; // Reference to the RectTransform of the discard zone
+    public DeckManager deckManager; // Référence au deck pour piocher une nouvelle carte
+    public bool isInDiscardZone = false; // Variable pour savoir si la carte est dans la zone de discard
+
+
     private void Start()
     {
         // Sauvegarder la position locale d'origine du parent
@@ -72,6 +80,8 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
         visibleCard.transform.position = newPosition;
 
         lastPosition = visibleCard.transform.position; // Initialiser la position pour le calcul du tangage
+       
+
     }
 
     public void OnDrag(PointerEventData eventData)
@@ -91,26 +101,47 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
         visibleCard.transform.rotation = Quaternion.Euler(0, 0, rotationZ);
 
         lastPosition = visibleCard.transform.position; // Mettre à jour la dernière position
+
+        // Check if the card is inside the discard zone
+        if (RectTransformUtility.RectangleContainsScreenPoint(discardZoneRectTransform, eventData.position, Camera.main))
+        {
+            isInDiscardZone = true;
+        }
+        else
+        {
+            isInDiscardZone = false;
+        }
     }
 
     public void OnEndDrag(PointerEventData eventData)
     {
         isDragging = false;
 
-        if (!isSelected)
+        // Vérifie si la carte est dans la zone de discard
+        if (isInDiscardZone)
         {
-            visibleCard.transform.DOLocalMove(Vector3.zero, 0.5f); // Retourner à (0,0) sur le parent invisible
+            DiscardCard();  // Si oui, appelle la méthode pour défausser la carte
         }
         else
         {
-            visibleCard.transform.DOLocalMove(originalPosition + new Vector3(0, 0.75f, 0), 0.5f); // Retourner à la position avec la montée
-        }
+            // Retourne la carte à sa position initiale si elle n'est pas dans la zone de discard
+            if (!isSelected)
+            {
+                visibleCard.transform.DOLocalMove(Vector3.zero, 0.5f);
+            }
+            else
+            {
+                visibleCard.transform.DOLocalMove(originalPosition + new Vector3(0, 0.75f, 0), 0.5f);
+            }
 
-        // Remettre la carte visible à sa position Z originale
-        Vector3 newPosition = visibleCard.transform.position;
-        newPosition.z = originalZPosition;
-        visibleCard.transform.position = newPosition;
+            // Remettre la carte visible à sa position Z originale
+            Vector3 newPosition = visibleCard.transform.position;
+            newPosition.z = originalZPosition;
+            visibleCard.transform.position = newPosition;
+        }
     }
+
+
 
     private void Update()
     {
@@ -177,4 +208,19 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
 
         isDragging = false;
     }
+    // Méthode appelée lorsque la carte est défaussée
+    public void DiscardCard()
+    {
+        // Perform discard animation or actions
+        visibleCard.transform.DOScale(Vector3.zero, 0.5f).OnComplete(() =>
+        {
+            // Deactivate the current card after the discard animation
+            gameObject.SetActive(false);
+
+            // Notify the DeckManager to draw a new card and place it in the same parent
+            deckManager.DrawNewCard(this.transform.parent); // Pass the parent to the deck manager
+        });
+    }
+
+
 }
