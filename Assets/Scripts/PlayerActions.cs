@@ -1,39 +1,29 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class PlayerActions : MonoBehaviour
 {
-    // Variables pour les ressources, les vaisseaux, et les planètes
-    public int resources;
-    public int food;
+    // Variables pour les ressources et les vaisseaux
     public int minerals;
+    public int food;
     public int shipCount;
     public int largeShipCount;
-    public int planetCount;
-    public int turnCount = 0;
-
-    // Boutons UI pour les améliorations
-    public Button normalToLargeUpgradeButton;
+    // Nouvelle variable pour les points
+    public int points = 0;
+    // Déclaration de la variable startingPlanetId
+    public int startingPlanetId; // Ajoutez cette ligne
+    // Boutons UI pour les actions
     public Button largeToTowerUpgradeButton;
+    public Button normalToLargeUpgradeButton;
     public Button createShipButton;
-
     // Préfabriqués pour les vaisseaux et les tours
     public GameObject normalShipPrefab;
     public GameObject largeShipPrefab;
     public GameObject towerPrefab;
-
     // Listes pour garder une trace des vaisseaux créés
     private List<GameObject> smallShips = new List<GameObject>();
     private List<GameObject> largeShips = new List<GameObject>();
-
-    // Localisation des vaisseaux sur les planètes
-    public Dictionary<int, int> smallShipLocations = new Dictionary<int, int>();
-    public Dictionary<int, int> largeShipLocations = new Dictionary<int, int>();
-
-    // Planète de départ du joueur
-    public int startingPlanetId = 0;
 
     void Start()
     {
@@ -41,9 +31,8 @@ public class PlayerActions : MonoBehaviour
         normalToLargeUpgradeButton.gameObject.SetActive(false);
         largeToTowerUpgradeButton.gameObject.SetActive(false);
         createShipButton.gameObject.SetActive(false);
-
-        // Ajouter les listeners pour les boutons d'amélioration
-        createShipButton.onClick.AddListener(() => CreateNormalShip(startingPlanetId));
+        // Ajouter les listeners pour les boutons
+        createShipButton.onClick.AddListener(() => CreateNormalShip(0)); // Planète ID par défaut
         normalToLargeUpgradeButton.onClick.AddListener(() => UpgradeToLargeShip());
         largeToTowerUpgradeButton.onClick.AddListener(() => UpgradeToTower());
     }
@@ -52,11 +41,17 @@ public class PlayerActions : MonoBehaviour
     {
         // Activer le bouton de création de vaisseau si assez de ressources
         createShipButton.gameObject.SetActive(minerals >= 3 && food >= 3);
-        // Mettre à jour les boutons d'amélioration
-        UpdateUpgradeButtons(startingPlanetId);
+        UpdateUpgradeButtons();
     }
 
-    // Création d'un vaisseau normal avec 3 minerais et 3 nourritures
+    // Méthode pour ajouter des points
+    public void AddPoints(int amount)
+    {
+        points += amount; // Ajoute des points
+        Debug.Log("Points ajoutés : " + amount + ". Total : " + points);
+    }
+
+    // Créer un vaisseau normal
     public void CreateNormalShip(int planetId)
     {
         if (minerals >= 3 && food >= 3)
@@ -64,119 +59,121 @@ public class PlayerActions : MonoBehaviour
             minerals -= 3;
             food -= 3;
             shipCount++;
-            if (!smallShipLocations.ContainsKey(planetId))
-                smallShipLocations[planetId] = 0;
-            smallShipLocations[planetId]++;
-            // Instancier le vaisseau sur la planète de départ
-            GameObject newShip = Instantiate(normalShipPrefab, GetPlanetPosition(planetId), Quaternion.identity);
-            smallShips.Add(newShip); // Ajouter à la liste des petits vaisseaux
-            Debug.Log("Vaisseau normal créé à la planète de départ.");
+            Vector3 spawnPosition = GetPlanetPosition(planetId) + new Vector3(0, 0, -1);
+            spawnPosition = AdjustSpawnPosition(spawnPosition, true); // Ajuster la position pour les vaisseaux normaux
+            // Créer un vaisseau normal
+            GameObject newShip = Instantiate(normalShipPrefab, spawnPosition, Quaternion.identity);
+            smallShips.Add(newShip);
         }
         else
         {
-            Debug.Log("Pas assez de minerais ou de nourriture.");
+            Debug.Log("Pas assez de ressources.");
         }
+    }
+
+    // Créer un gros vaisseau
+    public void UpgradeToLargeShip()
+    {
+        if (smallShips.Count >= 2)
+        {
+            shipCount -= 2;
+            largeShipCount++;
+            // Détruire deux petits vaisseaux
+            Destroy(smallShips[0]);
+            smallShips.RemoveAt(0);
+            Destroy(smallShips[0]);
+            smallShips.RemoveAt(0);
+            // Créer un gros vaisseau
+            Vector3 spawnPosition = GetPlanetPosition(startingPlanetId) + new Vector3(0, 0, -1);
+            spawnPosition = AdjustSpawnPosition(spawnPosition, false); // Ajuster la position pour les gros vaisseaux
+            GameObject newLargeShip = Instantiate(largeShipPrefab, spawnPosition, Quaternion.identity);
+            largeShips.Add(newLargeShip);
+        }
+        else
+        {
+            Debug.Log("Pas assez de vaisseaux normaux.");
+        }
+    }
+
+    // Ajuste la position de création si un vaisseau ou une tour existe déjà
+    private Vector3 AdjustSpawnPosition(Vector3 originalPosition, bool isNormalShip)
+    {
+        float offset = 1.0f; // Décalage en unités
+        int attempts = 0;
+        // Tenter de décaler sur l'axe X d'abord, puis Y
+        while (CheckIfPositionOccupied(originalPosition) && attempts < 10)
+        {
+            if (isNormalShip)
+            {
+                // Tenter de décaler en X
+                if (!CheckIfPositionOccupied(originalPosition + new Vector3(offset, 0, 0)))
+                {
+                    originalPosition.x += offset; // Décalage sur X
+                }
+                else
+                {
+                    originalPosition.y += offset; // Sinon, décaler sur Y
+                }
+            }
+            else
+            {
+                // Tenter de décaler en X pour les gros vaisseaux
+                if (!CheckIfPositionOccupied(originalPosition + new Vector3(offset, 0, 0)))
+                {
+                    originalPosition.x += offset; // Décalage sur X
+                }
+                else
+                {
+                    originalPosition.y += offset; // Sinon, décaler sur Y
+                }
+            }
+            attempts++;
+        }
+        return originalPosition;
+    }
+
+    // Vérifie si la position est occupée par un vaisseau ou une tour
+    private bool CheckIfPositionOccupied(Vector3 position)
+    {
+        // Vérifier tous les vaisseaux créés
+        foreach (GameObject ship in smallShips)
+        {
+            if (Vector3.Distance(ship.transform.position, position) < 0.5f) // Ajustez la distance selon vos besoins
+                return true;
+        }
+        foreach (GameObject largeShip in largeShips)
+        {
+            if (Vector3.Distance(largeShip.transform.position, position) < 0.5f) // Ajustez la distance selon vos besoins
+                return true;
+        }
+        // Vous pouvez ajouter une vérification pour les tours ici si nécessaire
+        return false;
     }
 
     // Mise à jour des boutons d'amélioration
-    public void UpdateUpgradeButtons(int planetId)
+    public void UpdateUpgradeButtons()
     {
-        int totalSmallShips = 0;
-        foreach (int shipCount in smallShipLocations.Values)
-        {
-            totalSmallShips += shipCount;
-        }
-        normalToLargeUpgradeButton.gameObject.SetActive(totalSmallShips >= 2);
+        normalToLargeUpgradeButton.gameObject.SetActive(smallShips.Count >= 2);
         largeToTowerUpgradeButton.gameObject.SetActive(largeShipCount >= 2);
     }
 
-    public void UpgradeToLargeShip()
-    {
-        int totalSmallShips = 0;
-        foreach (int shipCount in smallShipLocations.Values)
-        {
-            totalSmallShips += shipCount;
-        }
-        if (totalSmallShips >= 2)
-        {
-            int shipsToRemove = 2;
-            foreach (int planetId in new List<int>(smallShipLocations.Keys))
-            {
-                if (smallShipLocations[planetId] > 0)
-                {
-                    int availableShips = smallShipLocations[planetId];
-                    if (availableShips >= shipsToRemove)
-                    {
-                        smallShipLocations[planetId] -= shipsToRemove;
-                        shipCount -= shipsToRemove; // Corrected here
-                        largeShipCount++;
-
-                        // Détruire les vaisseaux normaux
-                        for (int i = 0; i < shipsToRemove; i++)
-                        {
-                            if (smallShips.Count > 0)
-                            {
-                                Destroy(smallShips[0]);
-                                smallShips.RemoveAt(0);
-                            }
-                        }
-                        // Créer un nouveau vaisseau gros
-                        GameObject newLargeShip = Instantiate(largeShipPrefab, GetPlanetPosition(startingPlanetId), Quaternion.identity);
-                        largeShips.Add(newLargeShip);
-                        Debug.Log("Amélioration effectuée : Gros vaisseau créé.");
-                        UpdateUpgradeButtons(startingPlanetId);
-                        return; // On sort de la méthode après avoir créé le gros vaisseau
-                    }
-                    else
-                    {
-                        // Si on n'a pas assez de vaisseaux, on les retire tous
-                        shipsToRemove -= availableShips;
-                        shipCount -= availableShips; // Corrected here
-                        smallShipLocations[planetId] = 0;
-                        for (int i = 0; i < availableShips; i++)
-                        {
-                            if (smallShips.Count > 0)
-                            {
-                                Destroy(smallShips[0]);
-                                smallShips.RemoveAt(0);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        else
-        {
-            Debug.Log("Pas assez de vaisseaux normaux pour l'amélioration.");
-        }
-    }
-
+    // Améliorer en tour
     public void UpgradeToTower()
     {
-        // Vérifie qu'il y a assez de gros vaisseaux
         if (largeShipCount >= 2)
         {
-            int shipsToRemove = 2;
-            // Déduction des gros vaisseaux
-            largeShipCount -= shipsToRemove;
-
-            // Détruire les gros vaisseaux
-            for (int i = 0; i < shipsToRemove; i++)
-            {
-                if (largeShips.Count > 0)
-                {
-                    Destroy(largeShips[0]);
-                    largeShips.RemoveAt(0);
-                }
-            }
-            // Créer une nouvelle tour sur la planète du joueur
-            Instantiate(towerPrefab, GetPlanetPosition(startingPlanetId), Quaternion.identity);
-            Debug.Log("Amélioration effectuée : Tour créée.");
-            UpdateUpgradeButtons(startingPlanetId);
+            largeShipCount -= 2;
+            // Détruire deux gros vaisseaux
+            Destroy(largeShips[0]);
+            largeShips.RemoveAt(0);
+            Destroy(largeShips[0]);
+            largeShips.RemoveAt(0);
+            // Créer une tour
+            Instantiate(towerPrefab, GetPlanetPosition(startingPlanetId) + new Vector3(0, 0, -1), Quaternion.identity);
         }
         else
         {
-            Debug.Log("Pas assez de gros vaisseaux pour l'amélioration en tour.");
+            Debug.Log("Pas assez de gros vaisseaux.");
         }
     }
 
@@ -184,11 +181,5 @@ public class PlayerActions : MonoBehaviour
     private Vector3 GetPlanetPosition(int planetId)
     {
         return new Vector3(planetId * 2, 0, 0);
-    }
-
-    // Vérifier si une planète est colonisée
-    private bool IsPlanetColonized(int planetId)
-    {
-        return planetCount > planetId;
     }
 }

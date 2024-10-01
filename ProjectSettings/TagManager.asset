@@ -9,13 +9,14 @@ TagManager:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Ship
   - Water
   - UI
   - 
   - 
   - 
   - 
+  - Planet
   - 
   - 
   - 
@@ -36,8 +37,7 @@ TagManager:
   - 
   - 
   - 
-  - 
-  - 
+  - Image de fond
   m_SortingLayers:
   - name: Default
     uniqueID: 0
