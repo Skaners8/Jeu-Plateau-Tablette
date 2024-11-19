@@ -3,6 +3,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI; // For Image component
 using DG.Tweening;
 using System.Collections;
+using System.Collections.Generic;
 
 public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandler, IPointerDownHandler, IPointerUpHandler
 {
@@ -58,6 +59,12 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
 
     private bool isMovingToSlot = false;
 
+    // Static state to track if any card is being dragged
+    private static bool isAnyCardDragging = false;
+
+    // Static list to track all cards
+    private static List<Card> allCards = new List<Card>();
+
     private void Start()
     {
         defaultPosition = visibleCard.transform.localPosition;
@@ -81,13 +88,18 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
         {
             cardDescriptionText.text = ""; // Clear initial description
         }
+
+        // Add this card to the static list of all cards
+        allCards.Add(this);
     }
+
 
     public void OnBeginDrag(PointerEventData eventData)
     {
         if (!clickValid) return;
 
         isDragging = true;
+        isAnyCardDragging = true; // Set global dragging state
         offset = visibleCard.transform.position - Camera.main.ScreenToWorldPoint(eventData.position);
         Vector3 newPosition = visibleCard.transform.position;
         newPosition.z = 10;
@@ -95,8 +107,9 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
         lastPosition = visibleCard.transform.position;
 
         // Hide text while dragging
-        HideCardText();
+        HideAllTexts();
     }
+
 
     public void OnDrag(PointerEventData eventData)
     {
@@ -125,6 +138,12 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
 
     private void Update()
     {
+        // Hide all texts when any card is being dragged
+        if (isAnyCardDragging)
+        {
+            HideCardText();
+        }
+
         // Handle oscillator rotation for tilt independently of dragging
         float force = -spring * displacement - damp * oscillatorVelocity;
         oscillatorVelocity += force * Time.deltaTime;
@@ -207,6 +226,7 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
     public void OnEndDrag(PointerEventData eventData)
     {
         isDragging = false;
+        isAnyCardDragging = false; // Reset global dragging state
 
         if (isInDiscardZone)
         {
@@ -227,11 +247,15 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
             newPosition.z = originalZPosition;
             visibleCard.transform.position = newPosition;
         }
+
+        // Restore all texts after dragging
+        RestoreAllTexts();
     }
 
- private void ShowCardText()
+    private void ShowCardText()
     {
-        // Stop any ongoing coroutine before starting a new one
+        if (isAnyCardDragging) return; // Don't show text if any card is dragging
+
         if (titleDisplayCoroutine != null)
         {
             StopCoroutine(titleDisplayCoroutine);
@@ -241,14 +265,13 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
             StopCoroutine(descriptionDisplayCoroutine);
         }
 
-        // Start the coroutine to show the text letter by letter
         titleDisplayCoroutine = StartCoroutine(DisplayTextLetterByLetter(cardTitleText, titleText, letterDisplaySpeed));
         descriptionDisplayCoroutine = StartCoroutine(DisplayTextLetterByLetter(cardDescriptionText, descriptionText, descriptionDisplaySpeed));
     }
 
-   private void HideCardText()
+
+    private void HideCardText()
     {
-        // Stop displaying text and clear it
         if (titleDisplayCoroutine != null)
         {
             StopCoroutine(titleDisplayCoroutine);
@@ -268,7 +291,33 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
             cardDescriptionText.text = "";
         }
     }
-private IEnumerator DisplayTextLetterByLetter(Text targetTextComponent, string fullText, float speed)
+
+    private void HideAllTexts()
+    {
+        foreach (Card card in allCards)
+        {
+            if (card.gameObject.activeInHierarchy) // Skip inactive cards
+            {
+                card.HideCardText();
+            }
+        }
+    }
+
+
+    private void RestoreAllTexts()
+    {
+        foreach (Card card in allCards)
+        {
+            if (card.gameObject.activeInHierarchy && card.isSelected) // Skip inactive cards
+            {
+                card.ShowCardText();
+            }
+        }
+    }
+
+
+
+    private IEnumerator DisplayTextLetterByLetter(Text targetTextComponent, string fullText, float speed)
     {
         if (targetTextComponent != null)
         {
@@ -281,6 +330,7 @@ private IEnumerator DisplayTextLetterByLetter(Text targetTextComponent, string f
         }
     }
 
+
     public void DiscardCard()
     {
         visibleCard.transform.DOScale(Vector3.zero, 0.5f).OnComplete(() =>
@@ -289,6 +339,7 @@ private IEnumerator DisplayTextLetterByLetter(Text targetTextComponent, string f
             deckManager.DrawNewCard(this.transform.parent);
         });
     }
+
 
     public void MoveCardToPosition(Vector3 targetPosition)
     {
