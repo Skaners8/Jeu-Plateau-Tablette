@@ -26,6 +26,10 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
     private Vector3 lastPosition;
     private float originalZPosition;
 
+    // Add card ID to identify each card
+    [Header("Card Data")]
+    public int cardID;
+
     // Text display parameters
     [Header("Texte Carte")]
     public Text cardTitleText; // Reference to the Text component for the title
@@ -78,6 +82,11 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
 
         visibleImage.sprite = rectoImage.sprite;
         originalZPosition = visibleCard.transform.position.z;
+
+        // Load card text from CardDataLoader
+        var cardData = CardDataLoader.GetCardData(cardID);
+        titleText = cardData.title;
+        descriptionText = cardData.description;
 
         if (cardTitleText != null)
         {

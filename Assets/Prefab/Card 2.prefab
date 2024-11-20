@@ -165,7 +165,7 @@ GameObject:
   - component: {fileID: 2442645274200793495}
   - component: {fileID: 6789294543395268748}
   m_Layer: 0
-  m_Name: Card
+  m_Name: Card 2
   m_TagString: Slot
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -213,7 +213,7 @@ MonoBehaviour:
   visibleCard: {fileID: 4677339864497639289}
   rectoImage: {fileID: 7704299129937413714}
   versoImage: {fileID: 5377156920249164479}
-  cardID: 1
+  cardID: 3
   cardTitleText: {fileID: 1053116745512089806}
   titleText: Le Baron
   letterDisplaySpeed: 0.025
