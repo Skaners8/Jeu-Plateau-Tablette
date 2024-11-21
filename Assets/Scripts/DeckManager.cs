@@ -6,7 +6,6 @@ using UnityEngine.UI;
 public class DeckManager : MonoBehaviour
 {
     [Header("Deck Settings")]
-    public GameObject cardPrefab; // Reference to the card prefab
     public Transform cardParent; // The parent where the card should be placed
     public RectTransform discardZoneRectTransform; // Reference to the discard zone
     public Transform deckPosition; // The transform where the deck is located
@@ -16,6 +15,11 @@ public class DeckManager : MonoBehaviour
     public Text deckCountText; // UI Text to display the number of remaining cards
     public List<CardEntry> initialDeck = new List<CardEntry>(); // Initial deck composition
 
+    [Header("Deck Prefabs")]
+    public GameObject[] prefabList; // Array of prefabs for different cards
+    public int[] prefabCardIDs; // Array of corresponding IDs for each prefab
+    private Dictionary<int, GameObject> cardPrefabs = new Dictionary<int, GameObject>(); // Dictionary to map ID to prefab
+
     [System.Serializable]
     public class CardEntry
     {
@@ -24,6 +28,21 @@ public class DeckManager : MonoBehaviour
     }
 
     private List<int> cardPool = new List<int>(); // Pool of card IDs in the deck
+
+    private void Awake()
+    {
+        // Populate the dictionary with prefab mappings
+        if (prefabList.Length != prefabCardIDs.Length)
+        {
+            Debug.LogError("Prefab list and Card ID list must have the same length!");
+            return;
+        }
+
+        for (int i = 0; i < prefabList.Length; i++)
+        {
+            cardPrefabs[prefabCardIDs[i]] = prefabList[i];
+        }
+    }
 
     private void Start()
     {
@@ -78,8 +97,16 @@ public class DeckManager : MonoBehaviour
         int cardID = cardPool[0];
         cardPool.RemoveAt(0);
 
-        // Instantiate a new card at the deck position
-        GameObject newCard = Instantiate(cardPrefab, deckPosition.position, Quaternion.identity);
+        // Find the correct prefab for this card ID
+        GameObject selectedPrefab;
+        if (!cardPrefabs.TryGetValue(cardID, out selectedPrefab))
+        {
+            Debug.LogError($"No prefab found for card ID: {cardID}");
+            return;
+        }
+
+        // Instantiate the appropriate prefab at the deck position
+        GameObject newCard = Instantiate(selectedPrefab, deckPosition.position, Quaternion.identity);
 
         // Set the card as a child of the target parent
         newCard.transform.SetParent(targetParent, worldPositionStays: true);
