@@ -220,10 +220,6 @@ MonoBehaviour:
   cardDescriptionText: {fileID: 3957151951321641046}
   descriptionText: Chaque roi en main octroie x1.5 Multi.
   descriptionDisplaySpeed: 0.02
-  cardPointsText: {fileID: 3944983654203248676}
-  pointsText: 'Points: 0'
-  cardBonusText: {fileID: 7964406666087091391}
-  bonusText: 'Bonus: None'
   tiltAmount: 50
   oscillatorVelocity: 0
   spring: 350
@@ -458,7 +454,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 592a8d0a673a1d743aae6ef3f0c63c2e, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 13617949d7f573f4e98f54faefd76dbe, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1

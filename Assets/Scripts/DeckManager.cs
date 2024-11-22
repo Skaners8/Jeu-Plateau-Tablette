@@ -13,6 +13,9 @@ public class DeckManager : MonoBehaviour
 
     [Header("Deck Composition")]
     public Text deckCountText; // UI Text to display the number of remaining cards
+    public Text card1CountText; // UI Text to display count for card ID 1
+    public Text card2CountText; // UI Text to display count for card ID 2
+    public Text card3CountText; // UI Text to display count for card ID 3
     public List<CardEntry> initialDeck = new List<CardEntry>(); // Initial deck composition
 
     [Header("Deck Prefabs")]
@@ -149,6 +152,21 @@ public class DeckManager : MonoBehaviour
         if (deckCountText != null)
         {
             deckCountText.text = $"Deck: {cardPool.Count} Cards";
+        }
+
+        if (card1CountText != null)
+        {
+            card1CountText.text = $"Card 1: {GetCardCount(1)}";
+        }
+
+        if (card2CountText != null)
+        {
+            card2CountText.text = $"Card 2: {GetCardCount(2)}";
+        }
+
+        if (card3CountText != null)
+        {
+            card3CountText.text = $"Card 3: {GetCardCount(3)}";
         }
     }
 
