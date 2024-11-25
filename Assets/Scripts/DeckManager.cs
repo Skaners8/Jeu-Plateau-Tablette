@@ -8,14 +8,12 @@ public class DeckManager : MonoBehaviour
     [Header("Deck Settings")]
     public Transform cardParent; // The parent where the card should be placed
     public RectTransform discardZoneRectTransform; // Reference to the discard zone
+    public GameObject discardZone; // Reference to the discard zone GameObject
     public Transform deckPosition; // The transform where the deck is located
     public int maxDeckSize = 30; // Maximum number of cards in the deck
 
     [Header("Deck Composition")]
     public Text deckCountText; // UI Text to display the number of remaining cards
-    public Text card1CountText; // UI Text to display count for card ID 1
-    public Text card2CountText; // UI Text to display count for card ID 2
-    public Text card3CountText; // UI Text to display count for card ID 3
     public List<CardEntry> initialDeck = new List<CardEntry>(); // Initial deck composition
 
     [Header("Deck Prefabs")]
@@ -127,8 +125,11 @@ public class DeckManager : MonoBehaviour
             // Assign the card ID
             newCardScript.cardID = cardID;
 
-            // Set up references for the new card
+            // Pass the discard zone reference to the new card
+            newCardScript.discardZone = discardZone;
             newCardScript.discardZoneRectTransform = discardZoneRectTransform;
+
+            // Set up references for the new card
             newCardScript.deckManager = this;
 
             // Re-enable the card interactions after the movement is done
@@ -152,21 +153,6 @@ public class DeckManager : MonoBehaviour
         if (deckCountText != null)
         {
             deckCountText.text = $"Deck: {cardPool.Count} Cards";
-        }
-
-        if (card1CountText != null)
-        {
-            card1CountText.text = $"Card 1: {GetCardCount(1)}";
-        }
-
-        if (card2CountText != null)
-        {
-            card2CountText.text = $"Card 2: {GetCardCount(2)}";
-        }
-
-        if (card3CountText != null)
-        {
-            card3CountText.text = $"Card 3: {GetCardCount(3)}";
         }
     }
 

@@ -53,6 +53,7 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
 
     public Shadow shadowScript;
     public RectTransform discardZoneRectTransform;
+    public GameObject discardZone; // Reference to the discard zone GameObject
     public DeckManager deckManager;
     public bool isInDiscardZone = false;
 
@@ -89,6 +90,12 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
         {
             cardDescriptionText.text = ""; // Clear initial description
         }
+
+        // Ensure the discard zone is hidden at the start
+        if (discardZone != null)
+        {
+            discardZone.SetActive(false);
+        }
     }
 
     public void OnBeginDrag(PointerEventData eventData)
@@ -105,6 +112,12 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
 
         // Hide text while dragging
         HideCardText();
+
+        // Show the discard zone when dragging starts
+        if (discardZone != null)
+        {
+            discardZone.SetActive(true);
+        }
     }
 
     public void OnDrag(PointerEventData eventData)
@@ -204,6 +217,12 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
             Vector3 newPosition = visibleCard.transform.position;
             newPosition.z = originalZPosition;
             visibleCard.transform.position = newPosition;
+        }
+
+        // Hide the discard zone when dragging ends
+        if (discardZone != null)
+        {
+            discardZone.SetActive(false);
         }
 
         RestoreCardText();
