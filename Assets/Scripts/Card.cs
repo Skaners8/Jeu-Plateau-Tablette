@@ -12,16 +12,12 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
     private Vector3 defaultPosition;
     public bool isSelected = false;
     public bool isDragging = false;
-    public bool isFlipped = false;
     public float clickTime = 0f;
     public float clickDurationThreshold = 0.2f;
     private bool clickValid = true;
 
-    public GameObject invisibleCard;
     public GameObject visibleCard;
-
-    public Image rectoImage;
-    public Image versoImage;
+    public Image rectoImage; // Use only one side of the card
     private Image visibleImage;
     private Vector3 lastPosition;
     private float originalZPosition;
@@ -32,18 +28,17 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
 
     // Text display parameters
     [Header("Texte Carte")]
-    public Text cardTitleText; // Reference to the Text component for the title
-    public string titleText = "Card Title"; // The full title to display
-    public float letterDisplaySpeed = 0.05f; // Speed for displaying letters
+    public Text cardTitleText;
+    public string titleText = "Card Title";
+    public float letterDisplaySpeed = 0.05f;
 
-    public Text cardDescriptionText; // Reference to the Text component for the description
-    public string descriptionText = "Card Description"; // The full description to display
-    public float descriptionDisplaySpeed = 0.02f; // Speed for displaying description letters
+    public Text cardDescriptionText;
+    public string descriptionText = "Card Description";
+    public float descriptionDisplaySpeed = 0.02f;
 
     private Coroutine titleDisplayCoroutine;
     private Coroutine descriptionDisplayCoroutine;
 
-    // Tilt and oscillation parameters
     [Header("Mouvement de la carte")]
     public float tiltAmount = 40f;
     public float oscillatorVelocity = 0f;
@@ -66,9 +61,6 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
     // Static state to track if any card is being dragged
     private static bool isAnyCardDragging = false;
 
-    // Static list to track all cards
-    private static List<Card> allCards = new List<Card>();
-
     private void Start()
     {
         defaultPosition = visibleCard.transform.localPosition;
@@ -80,7 +72,7 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
             return;
         }
 
-        visibleImage.sprite = rectoImage.sprite;
+        visibleImage.sprite = rectoImage.sprite; // Only use the rectoImage
         originalZPosition = visibleCard.transform.position.z;
 
         // Load card text from CardDataLoader
@@ -97,11 +89,7 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
         {
             cardDescriptionText.text = ""; // Clear initial description
         }
-
-        // Add this card to the static list of all cards
-        allCards.Add(this);
     }
-
 
     public void OnBeginDrag(PointerEventData eventData)
     {
@@ -116,20 +104,17 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
         lastPosition = visibleCard.transform.position;
 
         // Hide text while dragging
-        HideAllTexts();
+        HideCardText();
     }
-
 
     public void OnDrag(PointerEventData eventData)
     {
         if (!isDragging) return;
 
-        // Handle the card's position update
         Vector3 newPos = Camera.main.ScreenToWorldPoint(eventData.position) + offset;
         newPos.z = 10;
         visibleCard.transform.position = newPos;
 
-        // Update the tilt based on movement speed, but don't affect position
         float cardSpeedX = (visibleCard.transform.position.x - lastPosition.x) / Time.deltaTime;
         oscillatorVelocity -= cardSpeedX * velocityMultiplier;
 
@@ -147,18 +132,15 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
 
     private void Update()
     {
-        // Hide all texts when any card is being dragged
         if (isAnyCardDragging)
         {
             HideCardText();
         }
 
-        // Handle oscillator rotation for tilt independently of dragging
         float force = -spring * displacement - damp * oscillatorVelocity;
         oscillatorVelocity += force * Time.deltaTime;
         displacement += oscillatorVelocity * Time.deltaTime;
 
-        // Apply displacement to the rotation
         float rotationZ = Mathf.Clamp(displacement, -tiltAmount, tiltAmount);
         visibleCard.transform.rotation = Quaternion.Euler(0, 0, rotationZ);
 
@@ -186,47 +168,14 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
             {
                 visibleCard.transform.DOLocalMoveX(defaultPosition.x + 1f, 0.2f);
                 isSelected = true;
-                ShowCardText(); // Show text when selected by the player
+                ShowCardText();
             }
             else
             {
                 visibleCard.transform.DOLocalMove(defaultPosition, 0.2f);
                 isSelected = false;
-                HideCardText(); // Hide text when deselected
+                HideCardText();
             }
-
-            this.enabled = false;
-
-            if (!isFlipped)
-            {
-                visibleCard.transform.DOScaleX(visibleCard.transform.localScale.x * 0.1f, 0.25f).OnComplete(() =>
-                {
-                    visibleImage.sprite = versoImage.sprite;
-                    visibleImage.raycastTarget = true;
-                    visibleCard.transform.DOScaleX(visibleCard.transform.localScale.x * 10f, 0.25f).OnComplete(() =>
-                    {
-                        this.enabled = true;
-                    });
-                });
-                isFlipped = true;
-            }
-            else
-            {
-                visibleCard.transform.DOScaleX(visibleCard.transform.localScale.x * 0.1f, 0.25f).OnComplete(() =>
-                {
-                    visibleImage.sprite = rectoImage.sprite;
-                    visibleImage.raycastTarget = true;
-                    visibleCard.transform.DOScaleX(visibleCard.transform.localScale.x * 10f, 0.25f).OnComplete(() =>
-                    {
-                        this.enabled = true;
-                    });
-                });
-                isFlipped = false;
-            }
-        }
-        else
-        {
-            clickValid = false;
         }
 
         isDragging = false;
@@ -235,7 +184,7 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
     public void OnEndDrag(PointerEventData eventData)
     {
         isDragging = false;
-        isAnyCardDragging = false; // Reset global dragging state
+        isAnyCardDragging = false;
 
         if (isInDiscardZone)
         {
@@ -257,14 +206,11 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
             visibleCard.transform.position = newPosition;
         }
 
-        // Restore all texts after dragging
-        RestoreAllTexts();
+        RestoreCardText();
     }
 
     private void ShowCardText()
     {
-        if (isAnyCardDragging) return; // Don't show text if any card is dragging
-
         if (titleDisplayCoroutine != null)
         {
             StopCoroutine(titleDisplayCoroutine);
@@ -278,7 +224,6 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
         descriptionDisplayCoroutine = StartCoroutine(DisplayTextLetterByLetter(cardDescriptionText, descriptionText, descriptionDisplaySpeed));
     }
 
-
     private void HideCardText()
     {
         if (titleDisplayCoroutine != null)
@@ -290,41 +235,17 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
             StopCoroutine(descriptionDisplayCoroutine);
         }
 
-        if (cardTitleText != null)
-        {
-            cardTitleText.text = "";
-        }
-
-        if (cardDescriptionText != null)
-        {
-            cardDescriptionText.text = "";
-        }
+        if (cardTitleText != null) cardTitleText.text = "";
+        if (cardDescriptionText != null) cardDescriptionText.text = "";
     }
 
-    private void HideAllTexts()
+    private void RestoreCardText()
     {
-        foreach (Card card in allCards)
+        if (isSelected)
         {
-            if (card.gameObject.activeInHierarchy) // Skip inactive cards
-            {
-                card.HideCardText();
-            }
+            ShowCardText();
         }
     }
-
-
-    private void RestoreAllTexts()
-    {
-        foreach (Card card in allCards)
-        {
-            if (card.gameObject.activeInHierarchy && card.isSelected) // Skip inactive cards
-            {
-                card.ShowCardText();
-            }
-        }
-    }
-
-
 
     private IEnumerator DisplayTextLetterByLetter(Text targetTextComponent, string fullText, float speed)
     {
@@ -339,25 +260,12 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
         }
     }
 
-
     public void DiscardCard()
     {
         visibleCard.transform.DOScale(Vector3.zero, 0.5f).OnComplete(() =>
         {
             gameObject.SetActive(false);
             deckManager.DrawNewCard(this.transform.parent);
-        });
-    }
-
-
-    public void MoveCardToPosition(Vector3 targetPosition)
-    {
-        lastPosition = visibleCard.transform.position;
-        visibleCard.transform.DOMove(targetPosition, 0.8f).OnUpdate(() =>
-        {
-            float cardSpeedX = (visibleCard.transform.position.x - lastPosition.x) / Time.deltaTime;
-            oscillatorVelocity -= cardSpeedX * velocityMultiplier;
-            lastPosition = visibleCard.transform.position;
         });
     }
 }
