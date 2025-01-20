@@ -13,6 +13,7 @@ public class ResourceHUD : MonoBehaviour
     public Vector3 segmentScale = new Vector3(1f, 1f, 1f);   // Scale for each segment (default is 1)
 
     private PlayerActions playerActions;
+    private Player player;
 
     private void Start()
     {
@@ -84,9 +85,9 @@ public class ResourceHUD : MonoBehaviour
     public void UpdateHUD()
     {
         // Update segments based on the player's current resources and points
-        UpdateResourceSegments(mineralsBarContainer, playerActions.minerals);
-        UpdateResourceSegments(foodBarContainer, playerActions.food);
-        UpdateResourceSegments(pointsBarContainer, playerActions.points);
+        UpdateResourceSegments(mineralsBarContainer, player.minerals);
+        UpdateResourceSegments(foodBarContainer, player.food);
+        UpdateResourceSegments(pointsBarContainer, player.points);
     }
 
     // Show or hide segments based on the player's current resource amount
