@@ -18,6 +18,8 @@ public class PlayerActions : MonoBehaviour
 
     public Text testMinerais;
     public Text testFood;
+    public Text testShip;
+    public Text testBigShip;
 
     // Nouveau : Dictionnaire pour suivre les slots libres sur chaque planète
     private Dictionary<int, List<Vector3>> planetSlots = new Dictionary<int, List<Vector3>>();
@@ -53,21 +55,35 @@ public class PlayerActions : MonoBehaviour
 
     void Update()
     {
-        // Obtenir le joueur actuel + mettre à jour ses informations (utile pour le HUD des ressources d'Axel)
+        // Obtenir le joueur actuel + mettre à jour ses informations
         Player currentPlayer = GameManager.Instance.GetCurrentPlayer(); // récupère le joueur actuel
-        testMinerais.text = "Minerals: " + currentPlayer.minerals.ToString(); //Met à jour un texte avec la valeur des variables de chaque joueur
+        testMinerais.text = "Minerals: " + currentPlayer.minerals.ToString(); // Met à jour un texte avec la valeur des variables de chaque joueur
         testFood.text = "Nourriture: " + currentPlayer.food.ToString();
+        testShip.text = "Vaisseaux: " + currentPlayer.shipCount.ToString();
+        testBigShip.text = "Gros Vaisseaux: " + currentPlayer.largeShipCount.ToString();
 
+        if (currentPlayer.shipCount < 2)
+        {
+            UpdateUpgradeButtons();
+        } 
+        else if (currentPlayer.shipCount >= 2)
+        {
+            UpdateUpgradeButtons();
+        }
 
         player = gameManager.GetCurrentPlayer(); // On obtient le joueur actuel via GameManager
 
         if (gameManager.isPlayerTurn)
         {
+            // Vérifier si le joueur peut créer un vaisseau
             createShipButton.gameObject.SetActive(player.minerals >= 3 && player.food >= 3);
+
+            // Mettre à jour les boutons d'amélioration
             UpdateUpgradeButtons();
         }
         else
         {
+            // Désactiver tous les boutons quand ce n'est pas le tour du joueur
             createShipButton.gameObject.SetActive(false);
             normalToLargeUpgradeButton.gameObject.SetActive(false);
             largeToTowerUpgradeButton.gameObject.SetActive(false);
@@ -76,7 +92,6 @@ public class PlayerActions : MonoBehaviour
 
     public void CreateNormalShip()
     {
-        // Obtenir le joueur actuel
         Player currentPlayer = GameManager.Instance.GetCurrentPlayer();
 
         if (currentPlayer.minerals < 3 && currentPlayer.food < 3)
@@ -170,6 +185,7 @@ public class PlayerActions : MonoBehaviour
                     GameObject newLargeShip = Instantiate(largeShipPrefab, spawnPosition, Quaternion.identity);
                     newLargeShip.GetComponent<Ship>().owner = currentPlayer; // Lier le grand vaisseau au joueur actif
                     largeShips.Add(newLargeShip);
+                    GameManager.Instance.ActionTaken();
                 }
                 else
                 {
@@ -189,8 +205,12 @@ public class PlayerActions : MonoBehaviour
 
     public void UpdateUpgradeButtons()
     {
-        normalToLargeUpgradeButton.gameObject.SetActive(smallShips.Count >= 2);
-        largeToTowerUpgradeButton.gameObject.SetActive(player.largeShipCount >= 2);
+        Player currentPlayer = GameManager.Instance.GetCurrentPlayer();
+        // Désactiver le bouton d'amélioration du vaisseau normal au vaisseau grand vaisseau si le joueur ne peut pas
+        normalToLargeUpgradeButton.gameObject.SetActive(currentPlayer.shipCount >= 2);  // Ajout de condition de ressources si nécessaire
+
+        // Désactiver le bouton d'amélioration du vaisseau grand vaisseau à tour si le joueur ne possède pas assez de vaisseaux
+        largeToTowerUpgradeButton.gameObject.SetActive(currentPlayer.largeShipCount >= 2);
     }
 
     public void UpgradeToTower()

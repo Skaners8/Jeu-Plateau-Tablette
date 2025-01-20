@@ -93,6 +93,20 @@ public class Planet : MonoBehaviour
         UpdateSprite();
     }
 
+    // Méthode pour récupérer le prochain slot libre
+    public Vector3 GetNextFreeSlot()
+    {
+        for (int i = 0; i < slotOccupied.Length; i++)
+        {
+            if (!slotOccupied[i])
+            {
+                slotOccupied[i] = true;  // Marquer le slot comme occupé
+                return shipSlots[i].position;
+            }
+        }
+        return Vector3.zero;  // Aucun slot libre
+    }
+
     private void UpdateSprite()
     {
         if (spriteRenderer == null) { spriteRenderer = GetComponent<SpriteRenderer>(); }
