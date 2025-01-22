@@ -21,9 +21,12 @@ public class GameManager : MonoBehaviour
     public Button endTurnButton;
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     public ResourceHUD resourceHUD; // Référence au ResourceHUD
 
 =======
+=======
+>>>>>>> Stashed changes
     //Fin du jeu
     public GameObject endGamePanel;
     public Text winnerText;
@@ -39,6 +42,9 @@ public class GameManager : MonoBehaviour
     public Button quitPauseButton;
     public Button pauseButton;
     private bool isPaused = false;
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
     private void Awake()
@@ -62,6 +68,7 @@ public class GameManager : MonoBehaviour
     void Start()
     {
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         if (resourceHUD == null)
         {
             resourceHUD = FindObjectOfType<ResourceHUD>();
@@ -70,6 +77,10 @@ public class GameManager : MonoBehaviour
                 Debug.LogError("ResourceHUD introuvable dans la scène.");
             }
         }
+=======
+        endGamePanel.SetActive(false);
+        pausePanel.SetActive(false);
+>>>>>>> Stashed changes
 =======
         endGamePanel.SetActive(false);
         pausePanel.SetActive(false);
