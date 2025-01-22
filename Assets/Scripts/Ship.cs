@@ -47,22 +47,8 @@ public class Ship : MonoBehaviour
         // Ajoute le vaisseau à la liste des visiteurs de la planète et la découvre si elle ne l'est pas déjà.
         planet.VisitPlanet(this.gameObject);
 
-        // Vérifie si des ressources peuvent être collectées et si le vaisseau dispose encore de points d'action.
-        if (planet.CanCollectResources(this.gameObject) && actionPoints > 0)
-        {
-            CollectResources(planet); // Appelle la méthode de collecte de ressources.
-        }
-    }
-
-    // Méthode privée pour collecter les ressources d'une planète.
-    private void CollectResources(Planet planet)
-    {
-        // Vérifie si le vaisseau est grand (seuls les grands vaisseaux collectent les ressources).
-        if (isLargeShip == true)
-        {
-            actionPoints--; // Réduit le nombre de points d'action du vaisseau après la collecte.
-            Debug.Log("Resources collected from planet."); // Affiche un message de débogage indiquant la collecte de ressources.
-        }
+        // Mise à jour de la planète actuelle du vaisseau
+        shipSelection.currentPlanet = planet.gameObject;  // Met à jour currentPlanet dans ShipSelection
     }
 
     // Méthode pour tenter de coloniser une planète.
@@ -72,7 +58,7 @@ public class Ship : MonoBehaviour
         if (planet.CanColonize())
         {
             planet.ColonizePlanet(); // Colonise la planète.
-            Debug.Log("Planet colonized!"); // Affiche un message de débogage indiquant la colonisation.
+            Debug.Log("Planet colonisée!"); // Affiche un message de débogage indiquant la colonisation.
         }
     }
 }

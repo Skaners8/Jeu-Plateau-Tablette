@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 public class ShipSelection : MonoBehaviour
 {
-    private GameObject selectedShip;
+    public GameObject selectedShip;
     private GameObject targetPlanet;
     public GameObject currentPlanet { get; set; }
     public GameObject confirmationPanel; // Panel contenant la boîte de dialogue
@@ -51,19 +51,80 @@ public class ShipSelection : MonoBehaviour
             selectionText.text = "Choisissez la destination"; // Change le texte
             cancelButton.onClick.RemoveAllListeners();
             cancelButton.onClick.AddListener(() => CancelSelection());
+
+            // Mettre à jour la planète actuelle du vaisseau
+            currentPlanet = shipComponent.shipSelection.currentPlanet;
         }
         else
         {
+            errorMessageText.text = "Ce vaisseau ne vous appartient pas";
             StartCoroutine(DisplayErrorMessage());
         }
     }
 
+    public void SelectPlanet(GameObject planet)
+    {
+        // Si un vaisseau est déjà sélectionné et que la planète n'est pas la planète actuelle
+        if (selectedShip != null)
+        {
+            Planet planetComponent = planet.GetComponent<Planet>();
+            
+            // Vérifie si la planète est la même que celle où se trouve le vaisseau
+            if (planet == currentPlanet)
+            {
+                return;
+            }
+            
+            // Planète sélectionnée pour déplacer le vaisseau
+            targetPlanet = planet;
+            confirmationPanel.SetActive(true);
+            confirmationText.text = $"Envoyer {selectedShip.name} vers {planet.name} ?";
+        }
+    }
+
+    public void OnConfirmMove()
+    {
+        if (selectedShip != null && targetPlanet != null)
+        {
+            // Libérer le slot de la planète actuelle avant de déplacer le vaisseau
+            if (currentPlanet != null)
+            {
+                currentPlanet.GetComponent<Planet>().FreeSlot(selectedShip);
+            }
+
+            // Ajouter le vaisseau à la nouvelle planète
+            targetPlanet.GetComponent<Planet>().AddShipToSlot(selectedShip);
+
+            // Mise à jour de la planète actuelle
+            currentPlanet = targetPlanet;
+
+            // Réinitialisation des sélections
+            selectedShip = null;
+            targetPlanet = null;
+            confirmationPanel.SetActive(false);
+            selectionPanel.SetActive(false);
+
+            GameManager.Instance.ActionTaken();
+        }
+    }
+
+    private void OnCancelMove()
+    {
+        confirmationPanel.SetActive(false);
+        selectedShip = null;
+        targetPlanet = null;
+    }
+
+    public void CancelSelection()
+    {
+        selectedShip = null;
+        selectionPanel.SetActive(false);
+        confirmationPanel.SetActive(false);
+    }
+
     private IEnumerator DisplayErrorMessage()
     {
-        // Affiche le message
-        Debug.Log("DisplayErrorMessage Coroutine called"); // Vérifie que la coroutine est appelée
         errorMessageText.gameObject.SetActive(true);
-        errorMessageText.text = "Ce vaisseau ne vous appartient pas";
 
         // Attendre 2 secondes avant de commencer la disparition
         yield return new WaitForSeconds(2f);
@@ -84,44 +145,5 @@ public class ShipSelection : MonoBehaviour
 
         // Remettre la transparence à 100% (complètement opaque)
         errorMessageText.color = new Color(initialColor.r, initialColor.g, initialColor.b, 1f);
-    }
-
-    public void CancelSelection()
-    {
-        selectedShip = null;
-        selectionPanel.SetActive(false);
-        confirmationPanel.SetActive(false);
-    }
-
-    public void SelectPlanet(GameObject planet)
-    {
-        if (selectedShip != null && planet != currentPlanet && planet != selectedShip.GetComponent<Ship>().shipSelection.currentPlanet)
-        {
-            targetPlanet = planet;
-            confirmationPanel.SetActive(true);
-            confirmationText.text = $"Envoyer {selectedShip.name} vers {planet.name} ?";
-        }
-    }
-
-    private void OnConfirmMove()
-    {
-        if (selectedShip != null && targetPlanet != null)
-        {
-            // Appelle la méthode AddShipToSlot de la planète cible pour gérer les slots
-            targetPlanet.GetComponent<Planet>().AddShipToSlot(selectedShip);
-
-            // Met à jour la référence de la planète actuelle et réinitialise les sélections
-            currentPlanet = targetPlanet;
-            selectedShip = null;
-            confirmationPanel.SetActive(false);
-            selectionPanel.SetActive(false);
-        }
-    }
-
-    private void OnCancelMove()
-    {
-        confirmationPanel.SetActive(false);
-        selectedShip = null;
-        targetPlanet = null;
     }
 }

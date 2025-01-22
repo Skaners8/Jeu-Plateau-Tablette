@@ -43,6 +43,5 @@ public class Player : MonoBehaviour
     public void AddPoints(int amount)
     {
         points += amount;
-        Debug.Log("Points ajoutés : " + amount + ". Total : " + points);
     }
 }
