@@ -4,32 +4,23 @@ using System.Collections.Generic;
 public class ResourceHUD : MonoBehaviour
 {
     [Header("Player 1 Prefabs")]
-    public GameObject player1ResourceSegmentPrefab; // Prefab for Player 1's segments
-    public GameObject player1MineralsIconPrefab;    // Prefab for Player 1's minerals icon
-    public GameObject player1FoodIconPrefab;        // Prefab for Player 1's food icon
-    public GameObject player1PointsIconPrefab;      // Prefab for Player 1's points icon
+    public GameObject player1SegmentPrefab;  // Prefab for Player 1's segments
+    public GameObject player1IconPrefab;     // Prefab for Player 1's icon
 
     [Header("Player 2 Prefabs")]
-    public GameObject player2ResourceSegmentPrefab; // Prefab for Player 2's segments
-    public GameObject player2MineralsIconPrefab;    // Prefab for Player 2's minerals icon
-    public GameObject player2FoodIconPrefab;        // Prefab for Player 2's food icon
-    public GameObject player2PointsIconPrefab;      // Prefab for Player 2's points icon
+    public GameObject player2SegmentPrefab;  // Prefab for Player 2's segments
+    public GameObject player2IconPrefab;     // Prefab for Player 2's icon
 
     [Header("Player 3 Prefabs")]
-    public GameObject player3ResourceSegmentPrefab; // Prefab for Player 3's segments
-    public GameObject player3MineralsIconPrefab;    // Prefab for Player 3's minerals icon
-    public GameObject player3FoodIconPrefab;        // Prefab for Player 3's food icon
-    public GameObject player3PointsIconPrefab;      // Prefab for Player 3's points icon
+    public GameObject player3SegmentPrefab;  // Prefab for Player 3's segments
+    public GameObject player3IconPrefab;     // Prefab for Player 3's icon
 
     [Header("Player 4 Prefabs")]
-    public GameObject player4ResourceSegmentPrefab; // Prefab for Player 4's segments
-    public GameObject player4MineralsIconPrefab;    // Prefab for Player 4's minerals icon
-    public GameObject player4FoodIconPrefab;        // Prefab for Player 4's food icon
-    public GameObject player4PointsIconPrefab;      // Prefab for Player 4's points icon
+    public GameObject player4SegmentPrefab;  // Prefab for Player 4's segments
+    public GameObject player4IconPrefab;     // Prefab for Player 4's icon
 
     [Header("General Settings")]
     public Camera mainCamera;                // Reference to the main camera
-    public int currentTurn = 0;              // Current turn index
 
     [Header("Bar Layout Settings")]
     public Vector2 mineralsBarOffset = new Vector2(-300, 200); // Offset for the minerals bar
@@ -38,13 +29,15 @@ public class ResourceHUD : MonoBehaviour
 
     public Vector2 firstSegmentOffset = new Vector2(10, 0);  // Offset for the first segment
     public Vector2 segmentSpacing = new Vector2(10, 0);      // Offset between segments
+    public Vector2 iconPosition = new Vector2(0, 400);       // Position for the independent icon
     public Vector3 segmentScale = new Vector3(1f, 1f, 1f);   // Scale for each segment
-    public Vector2 iconOffset = new Vector2(-30, 0);         // Offset for the resource icon relative to the first segment
-    public Vector3 iconScale = new Vector3(1.5f, 1.5f, 1.5f); // Scale for the resource icon
+    public Vector3 iconScale = new Vector3(1.5f, 1.5f, 1.5f); // Scale for the icon
 
     private Transform mineralsBarContainer;
     private Transform foodBarContainer;
     private Transform pointsBarContainer;
+
+    private GameObject currentIcon; // Independent icon for the current player
 
     private void Start()
     {
@@ -53,13 +46,26 @@ public class ResourceHUD : MonoBehaviour
             mainCamera = Camera.main;
         }
 
-        // Create resource bar containers
         mineralsBarContainer = CreateBarContainer("MineralsBar");
         foodBarContainer = CreateBarContainer("FoodBar");
         pointsBarContainer = CreateBarContainer("PointsBar");
 
-        InitializeResourceBars();
+        if (mineralsBarContainer == null || foodBarContainer == null || pointsBarContainer == null)
+        {
+            Debug.LogError("One or more resource bar containers were not initialized properly.");
+        }
+
+        UpdateBarsForCurrentPlayer();
     }
+    private void Awake()
+    {
+        // Initialize the bar containers
+        mineralsBarContainer = CreateBarContainer("MineralsBar");
+        foodBarContainer = CreateBarContainer("FoodBar");
+        pointsBarContainer = CreateBarContainer("PointsBar");
+    }
+
+
 
     private void LateUpdate()
     {
@@ -78,82 +84,78 @@ public class ResourceHUD : MonoBehaviour
         return barContainer.transform;
     }
 
-    // Initialize the resource bars
-    void InitializeResourceBars()
+    public void UpdateBarsForCurrentPlayer()
     {
-        Player currentPlayer = GameManager.Instance?.GetCurrentPlayer();
         int playerIndex = GameManager.Instance?.currentPlayerIndex ?? 0;
 
-        GameObject segmentPrefab = GetPlayerSpecificPrefab(playerIndex, "segment");
-        GameObject mineralsIconPrefab = GetPlayerSpecificPrefab(playerIndex, "minerals");
-        GameObject foodIconPrefab = GetPlayerSpecificPrefab(playerIndex, "food");
-        GameObject pointsIconPrefab = GetPlayerSpecificPrefab(playerIndex, "points");
+        GameObject segmentPrefab = GetPlayerSegmentPrefab(playerIndex);
+        GameObject iconPrefab = GetPlayerIconPrefab(playerIndex);
 
-        CreateResourceBar(mineralsBarContainer, 30, mineralsIconPrefab, segmentPrefab);   // Assuming 30 max minerals
-        CreateResourceBar(foodBarContainer, 30, foodIconPrefab, segmentPrefab);          // Assuming 30 max food
-        CreateResourceBar(pointsBarContainer, 30, pointsIconPrefab, segmentPrefab);      // Assuming 30 max points
-    }
-
-    // Retrieve specific prefab for a player based on type
-    private GameObject GetPlayerSpecificPrefab(int playerIndex, string type)
-    {
-        switch (type)
+        if (mineralsBarContainer == null || foodBarContainer == null || pointsBarContainer == null)
         {
-            case "segment":
-                return playerIndex switch
-                {
-                    0 => player1ResourceSegmentPrefab,
-                    1 => player2ResourceSegmentPrefab,
-                    2 => player3ResourceSegmentPrefab,
-                    3 => player4ResourceSegmentPrefab,
-                    _ => null
-                };
-            case "minerals":
-                return playerIndex switch
-                {
-                    0 => player1MineralsIconPrefab,
-                    1 => player2MineralsIconPrefab,
-                    2 => player3MineralsIconPrefab,
-                    3 => player4MineralsIconPrefab,
-                    _ => null
-                };
-            case "food":
-                return playerIndex switch
-                {
-                    0 => player1FoodIconPrefab,
-                    1 => player2FoodIconPrefab,
-                    2 => player3FoodIconPrefab,
-                    3 => player4FoodIconPrefab,
-                    _ => null
-                };
-            case "points":
-                return playerIndex switch
-                {
-                    0 => player1PointsIconPrefab,
-                    1 => player2PointsIconPrefab,
-                    2 => player3PointsIconPrefab,
-                    3 => player4PointsIconPrefab,
-                    _ => null
-                };
-            default:
-                return null;
+            Debug.LogError("Resource bar containers are not initialized.");
+            return;
         }
+
+        if (segmentPrefab == null)
+        {
+            Debug.LogError($"No segment prefab assigned for player {playerIndex + 1}.");
+            return;
+        }
+
+        UpdateResourceBar(mineralsBarContainer, 30, segmentPrefab);
+        UpdateResourceBar(foodBarContainer, 30, segmentPrefab);
+        UpdateResourceBar(pointsBarContainer, 30, segmentPrefab);
+
+        UpdateIndependentIcon(iconPrefab);
     }
 
-    // Create a resource bar with the appropriate segment offsets
-    void CreateResourceBar(Transform container, int maxSegments, GameObject iconPrefab, GameObject segmentPrefab)
+
+    private GameObject GetPlayerSegmentPrefab(int playerIndex)
     {
-        // Clear any existing segments
+        GameObject prefab = playerIndex switch
+        {
+            0 => player1SegmentPrefab,
+            1 => player2SegmentPrefab,
+            2 => player3SegmentPrefab,
+            3 => player4SegmentPrefab,
+            _ => null
+        };
+
+        if (prefab == null)
+        {
+            Debug.LogError($"Segment prefab for player {playerIndex + 1} is not assigned.");
+        }
+
+        return prefab;
+    }
+
+    private GameObject GetPlayerIconPrefab(int playerIndex)
+    {
+        GameObject prefab = playerIndex switch
+        {
+            0 => player1IconPrefab,
+            1 => player2IconPrefab,
+            2 => player3IconPrefab,
+            3 => player4IconPrefab,
+            _ => null
+        };
+
+        if (prefab == null)
+        {
+            Debug.LogError($"Icon prefab for player {playerIndex + 1} is not assigned.");
+        }
+
+        return prefab;
+    }
+    // Update a resource bar with the appropriate segment offsets
+    private void UpdateResourceBar(Transform container, int maxSegments, GameObject segmentPrefab)
+    {
+        // Clear any existing children
         foreach (Transform child in container)
         {
             Destroy(child.gameObject);
         }
-
-        // Add the icon to the left of the first segment
-        GameObject icon = Instantiate(iconPrefab, container);
-        RectTransform iconRect = icon.GetComponent<RectTransform>();
-        iconRect.anchoredPosition = firstSegmentOffset + iconOffset;
-        iconRect.localScale = iconScale;
 
         Vector2 currentPosition = firstSegmentOffset;
 
@@ -170,8 +172,26 @@ public class ResourceHUD : MonoBehaviour
         }
     }
 
+    // Update the independent icon for the current player
+    private void UpdateIndependentIcon(GameObject iconPrefab)
+    {
+        if (currentIcon != null)
+        {
+            Destroy(currentIcon);
+        }
+
+        if (iconPrefab != null)
+        {
+            currentIcon = Instantiate(iconPrefab, this.transform);
+            RectTransform iconRect = currentIcon.GetComponent<RectTransform>();
+            iconRect.SetParent(this.transform, false);
+            iconRect.anchoredPosition = iconPosition;
+            iconRect.localScale = iconScale;
+        }
+    }
+
     // Update the positions of the bars relative to the camera
-    void UpdateBarPositions()
+    private void UpdateBarPositions()
     {
         Vector3 screenPos = mainCamera.WorldToScreenPoint(mainCamera.transform.position);
 
@@ -180,7 +200,7 @@ public class ResourceHUD : MonoBehaviour
         UpdateBarPosition(pointsBarContainer, screenPos, pointsBarOffset);
     }
 
-    void UpdateBarPosition(Transform container, Vector3 screenPos, Vector2 offset)
+    private void UpdateBarPosition(Transform container, Vector3 screenPos, Vector2 offset)
     {
         RectTransform containerRect = container.GetComponent<RectTransform>();
         containerRect.position = screenPos + new Vector3(offset.x, offset.y, 0);
@@ -200,7 +220,7 @@ public class ResourceHUD : MonoBehaviour
     }
 
     // Show or hide segments based on the player's current resource amount
-    void UpdateResourceSegments(Transform container, int currentValue)
+    private void UpdateResourceSegments(Transform container, int currentValue)
     {
         for (int i = 0; i < container.childCount; i++)
         {

@@ -8,9 +8,6 @@ public class MainMenuManager : MonoBehaviour
     public static MainMenuManager Instance { get; private set; }
 
     public Button newGameButton;
-    public Button loadGameButton;
-    public Button quitGameButton;
-
     public GameObject mainMenu;
 
     private void Awake()
@@ -29,10 +26,8 @@ public class MainMenuManager : MonoBehaviour
 
     void Start()
     {
-        // Add listeners for buttons
+        // Add listener for the New Game button
         newGameButton.onClick.AddListener(StartNewGame);
-        loadGameButton.onClick.AddListener(LoadGame);
-        quitGameButton.onClick.AddListener(QuitGame);
 
         mainMenu.SetActive(true);
     }
@@ -41,20 +36,5 @@ public class MainMenuManager : MonoBehaviour
     {
         Debug.Log("Starting a new game...");
         SceneManager.LoadScene("JeuPrincipal");
-    }
-
-    void LoadGame()
-    {
-        Debug.Log("Loading a game...");
-        // Add load game logic here
-    }
-
-    public void QuitGame()
-    {
-        Debug.Log("Quitting the game...");
-        Application.Quit();
-#if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
-#endif
     }
 }

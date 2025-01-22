@@ -19,6 +19,9 @@ public class GameManager : MonoBehaviour
     public Text roundText;
     public Button endTurnButton;
 
+    public ResourceHUD resourceHUD; // Référence au ResourceHUD
+
+
     private void Awake()
     {
         if (Instance == null)
@@ -29,10 +32,24 @@ public class GameManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
+        if (resourceHUD == null)
+        {
+            Debug.LogError("ResourceHUD is not assigned in GameManager.");
+            return;
+        }
+
     }
 
     void Start()
     {
+        if (resourceHUD == null)
+        {
+            resourceHUD = FindObjectOfType<ResourceHUD>();
+            if (resourceHUD == null)
+            {
+                Debug.LogError("ResourceHUD introuvable dans la scène.");
+            }
+        }
         currentTurn = 0;
         currentRound = 1;
 
@@ -88,9 +105,23 @@ public class GameManager : MonoBehaviour
     public void StartNewTurn()
     {
         actionsTaken = 0;
-        isPlayerTurn = true; // Activer les actions pour le nouveau joueur
+        isPlayerTurn = true;
         UpdateTurnText();
+
+        // Ensure ResourceHUD is initialized and update bars
+        if (resourceHUD == null)
+        {
+            resourceHUD = FindObjectOfType<ResourceHUD>();
+            if (resourceHUD == null)
+            {
+                Debug.LogError("ResourceHUD is not assigned or found in the scene.");
+                return;
+            }
+        }
+
+        resourceHUD.UpdateBarsForCurrentPlayer();
     }
+
 
     public void EndTurn()
     {
