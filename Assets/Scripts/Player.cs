@@ -43,5 +43,6 @@ public class Player : MonoBehaviour
     public void AddPoints(int amount)
     {
         points += amount;
+        GameManager.Instance.CheckForWinner();  // Vérifier s'il y a un gagnant après ajout des points
     }
 }

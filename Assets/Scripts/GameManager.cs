@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement; 
 
 public class GameManager : MonoBehaviour
 {
@@ -19,8 +20,26 @@ public class GameManager : MonoBehaviour
     public Text roundText;
     public Button endTurnButton;
 
+<<<<<<< Updated upstream
     public ResourceHUD resourceHUD; // Référence au ResourceHUD
 
+=======
+    //Fin du jeu
+    public GameObject endGamePanel;
+    public Text winnerText;
+    public int winningPoints = 25;
+    public Button mainMenuButton;
+    public Button quitButton;
+
+    // Menu de pause
+    public GameObject pausePanel;
+    public Text pauseText;
+    public Button resumeButton;
+    public Button mainMenuPauseButton;
+    public Button quitPauseButton;
+    public Button pauseButton;
+    private bool isPaused = false;
+>>>>>>> Stashed changes
 
     private void Awake()
     {
@@ -42,6 +61,7 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+<<<<<<< Updated upstream
         if (resourceHUD == null)
         {
             resourceHUD = FindObjectOfType<ResourceHUD>();
@@ -50,6 +70,10 @@ public class GameManager : MonoBehaviour
                 Debug.LogError("ResourceHUD introuvable dans la scène.");
             }
         }
+=======
+        endGamePanel.SetActive(false);
+        pausePanel.SetActive(false);
+>>>>>>> Stashed changes
         currentTurn = 0;
         currentRound = 1;
 
@@ -85,6 +109,13 @@ public class GameManager : MonoBehaviour
         AssignPlanetsToPlayers();
 
         endTurnButton.onClick.AddListener(EndTurn);
+        mainMenuButton.onClick.AddListener(ReturnToMainMenu);
+        quitButton.onClick.AddListener(QuitGame);
+        resumeButton.onClick.AddListener(ResumeGame);
+        mainMenuPauseButton.onClick.AddListener(ReturnToMainMenu);
+        quitPauseButton.onClick.AddListener(QuitGame);
+        pauseButton.onClick.AddListener(PauseGame);
+
         StartNewRound();
     }
 
@@ -242,5 +273,59 @@ public class GameManager : MonoBehaviour
             }
         }
         return null;
+    }
+
+    // Nouvelle méthode : Vérification des points pour déterminer le gagnant
+    public void CheckForWinner()
+    {
+        foreach (Player player in players)
+        {
+            if (player.points >= winningPoints)
+            {
+                EndGame(player);
+                break;
+            }
+        }
+    }
+
+    // Nouvelle méthode : Afficher le menu de fin de partie avec le vainqueur
+    public void EndGame(Player winner)
+    {
+        isPlayerTurn = false;  // Désactiver les actions supplémentaires
+        endGamePanel.SetActive(true);  // Afficher le panneau de fin
+        winnerText.text = winner.playerName + " a gagné la partie !";  // Annonce du gagnant
+        Time.timeScale = 0;  // Arrêter le temps
+        CameraController cameraController = Camera.main.GetComponent<CameraController>();
+        if (cameraController != null)
+        {
+            cameraController.enabled = false;  // Désactiver le script de la caméra pour arrêter le mouvement
+        }
+    }
+
+    private void PauseGame()
+    {
+        isPaused = true;
+        pausePanel.SetActive(true);
+        Time.timeScale = 0;  // Mettre le temps en pause
+        Camera.main.GetComponent<CameraController>().enabled = false;  // Arrêter la caméra si elle est en mouvement
+    }
+
+    private void ResumeGame()
+    {
+        isPaused = false;
+        pausePanel.SetActive(false);
+        Time.timeScale = 1;  // Reprendre le temps
+        Camera.main.GetComponent<CameraController>().enabled = true;  // Reprendre la caméra
+    }
+
+    private void ReturnToMainMenu()
+    {
+        Time.timeScale = 1;  // Remettre le temps en marche si le jeu était en pause
+        SceneManager.LoadScene("StartMenu");  // Charger la scène du menu principal
+    }
+
+    private void QuitGame()
+    {
+        Application.Quit();
     }
 }
