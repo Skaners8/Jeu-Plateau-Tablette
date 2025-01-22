@@ -190,7 +190,7 @@ public class Planet : MonoBehaviour
     {
         isDiscovered = true;
         Player currentPlayer = GameManager.Instance.GetCurrentPlayer(); 
-        currentPlayer.AddPoints(25);
+        currentPlayer.AddPoints(5);
         GenerateResources();
     }
 
