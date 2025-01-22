@@ -8,23 +8,19 @@ public class Planet : MonoBehaviour
     public bool isDiscovered = false;
     public bool _isColonized = false;
     public int colonizationPoints = 10;
-    // Liste des types de ressources
     public List<ResourceType> resourceTypes = new List<ResourceType>();
     public int resourcesProduced = 0;
-    // Liste des vaisseaux sur la planète
     public List<GameObject> shipsOnPlanet = new List<GameObject>();
-    // Liste des positions des slots pour placer les vaisseaux
     public Transform[] shipSlots;
-    public bool[] slotOccupied; // Statut pour savoir si un slot est occupé
-    public Player player;  // Remplacer playerActions par player
-    public PlayerActions playerActions;
+    public bool[] slotOccupied;
+    public Player player;
     public ShipSelection shipSelection;
     public bool hasAddedPoints = false;
-    // Gestion des sprites
     public Sprite undiscoveredSprite;
     public Sprite discoveredSprite;
     public Sprite colonizedSprite;
     private SpriteRenderer spriteRenderer;
+
     public bool isColonized
     {
         get { return _isColonized; }
@@ -42,23 +38,60 @@ public class Planet : MonoBehaviour
     {
         shipSelection = FindObjectOfType<ShipSelection>();
         spriteRenderer = GetComponent<SpriteRenderer>();
+        if (spriteRenderer == null)
+        {
+            Debug.LogError("SpriteRenderer n'a pas été trouvé sur la planète.");
+        }
         UpdateSprite();
         if (isDiscovered)
         {
             GenerateResources();
         }
-        slotOccupied = new bool[shipSlots.Length];
+        if (shipSlots.Length > 0)
+        {
+            slotOccupied = new bool[shipSlots.Length];  // Initialisation correcte des slots
+        }
+        else
+        {
+            Debug.LogWarning("Aucun slot de vaisseau défini pour la planète.");
+        }
     }
 
+    // Ajout d'un vaisseau au slot libre
     public void AddShipToSlot(GameObject ship)
     {
+        // Vérifier si le vaisseau est déjà sur la planète avant de l'ajouter
+        if (shipsOnPlanet.Contains(ship))
+        {
+            Debug.Log("Le vaisseau est déjà sur cette planète.");
+            return;  // Ne pas ajouter le vaisseau à nouveau
+        }
+
+        // Vérifier s'il y a un slot disponible avant d'ajouter un vaisseau
+        bool slotAvailable = false;
         for (int i = 0; i < shipSlots.Length; i++)
         {
-            if (!slotOccupied[i])
+            if (!slotOccupied[i])  // Si le slot n'est pas occupé
             {
-                slotOccupied[i] = true;
-                ship.transform.position = shipSlots[i].position;
-                shipsOnPlanet.Add(ship);
+                slotAvailable = true;
+                break;
+            }
+        }
+
+        if (!slotAvailable)
+        {
+            Debug.Log("Aucun slot disponible pour ce vaisseau.");
+            return;
+        }
+
+        // Ajouter le vaisseau au premier slot libre
+        for (int i = 0; i < shipSlots.Length; i++)
+        {
+            if (!slotOccupied[i])  // Si le slot n'est pas occupé
+            {
+                slotOccupied[i] = true;  // Marque le slot comme occupé
+                ship.transform.position = shipSlots[i].position;  // Place le vaisseau dans le slot
+                shipsOnPlanet.Add(ship);  // Ajoute le vaisseau à la liste des vaisseaux
                 if (!isDiscovered)
                 {
                     DiscoverPlanet();
@@ -66,16 +99,47 @@ public class Planet : MonoBehaviour
                 return;
             }
         }
-        Debug.Log("Aucun slot disponible pour ce vaisseau.");
     }
 
-    public delegate void PlanetClicked(GameObject planet);
+    // Méthode pour récupérer le prochain slot libre
+    public Vector3 GetNextFreeSlot()
+    {
+        for (int i = 0; i < shipSlots.Length; i++)
+        {
+            if (!slotOccupied[i])
+            {
+                return shipSlots[i].position;
+            }
+        }
+        return Vector3.zero; // Si aucun slot n'est disponible
+    }
+
+    // Méthode pour libérer un slot occupé lorsque le vaisseau est déplacé
+    public void FreeSlot(GameObject ship)
+    {
+        int index = shipsOnPlanet.IndexOf(ship);
+        if (index >= 0)
+        {
+            shipsOnPlanet.RemoveAt(index);  // Retire le vaisseau de la liste
+
+            // Libérer le bon slot correspondant à ce vaisseau
+            for (int i = 0; i < shipSlots.Length; i++)
+            {
+                if (shipSlots[i].position == ship.transform.position)
+                {
+                    slotOccupied[i] = false;  // Libère le slot correspondant
+                    break;
+                }
+            }
+        }
+    }
+
     private void OnMouseDown()
     {
         if (!isColonized)
         {
             FindObjectOfType<ShipSelection>().SelectPlanet(this.gameObject);
-        }
+        } 
     }
 
     private void Update()
@@ -84,27 +148,13 @@ public class Planet : MonoBehaviour
         {
             GenerateResources();
         }
-        // Cette condition vérifie l'état de colonisation et l'ajout de points
-        if (_isColonized && !hasAddedPoints && player.startingPlanetId != this.GetInstanceID())
+        if (_isColonized && !hasAddedPoints)
         {
-            player.AddPoints(colonizationPoints);  // Ajouter des points seulement pour les planètes non de départ
+            Player currentPlayer = GameManager.Instance.GetCurrentPlayer(); 
+            currentPlayer.AddPoints(colonizationPoints);
             hasAddedPoints = true;
         }
         UpdateSprite();
-    }
-
-    // Méthode pour récupérer le prochain slot libre
-    public Vector3 GetNextFreeSlot()
-    {
-        for (int i = 0; i < slotOccupied.Length; i++)
-        {
-            if (!slotOccupied[i])
-            {
-                slotOccupied[i] = true;  // Marquer le slot comme occupé
-                return shipSlots[i].position;
-            }
-        }
-        return Vector3.zero;  // Aucun slot libre
     }
 
     private void UpdateSprite()
@@ -139,6 +189,8 @@ public class Planet : MonoBehaviour
     private void DiscoverPlanet()
     {
         isDiscovered = true;
+        Player currentPlayer = GameManager.Instance.GetCurrentPlayer(); 
+        currentPlayer.AddPoints(5);
         GenerateResources();
     }
 
@@ -174,11 +226,6 @@ public class Planet : MonoBehaviour
         if (CanColonize() && !hasAddedPoints)
         {
             isColonized = true;
-            if (player.startingPlanetId != this.GetInstanceID())
-            {
-                player.AddPoints(colonizationPoints);  // Ajouter des points seulement pour les planètes non de départ
-                hasAddedPoints = true;
-            }
         }
     }
 

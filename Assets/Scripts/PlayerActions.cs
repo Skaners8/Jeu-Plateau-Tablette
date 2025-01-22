@@ -20,6 +20,7 @@ public class PlayerActions : MonoBehaviour
     public Text testFood;
     public Text testShip;
     public Text testBigShip;
+    public Text testScore;
 
     // Nouveau : Dictionnaire pour suivre les slots libres sur chaque planète
     private Dictionary<int, List<Vector3>> planetSlots = new Dictionary<int, List<Vector3>>();
@@ -61,6 +62,7 @@ public class PlayerActions : MonoBehaviour
         testFood.text = "Nourriture: " + currentPlayer.food.ToString();
         testShip.text = "Vaisseaux: " + currentPlayer.shipCount.ToString();
         testBigShip.text = "Gros Vaisseaux: " + currentPlayer.largeShipCount.ToString();
+        testScore.text = "Score: " + currentPlayer.points.ToString();
 
         if (currentPlayer.shipCount < 2)
         {
@@ -124,24 +126,10 @@ public class PlayerActions : MonoBehaviour
         }
     }
 
-    // Méthode pour récupérer le prochain slot libre sur la planète
-    private Vector3 GetNextFreeSlot(int planetId)
-    {
-        if (planetSlots.ContainsKey(planetId) && planetSlots[planetId].Count > 0)
-        {
-            Vector3 slotPosition = planetSlots[planetId][0];
-            planetSlots[planetId].RemoveAt(0); // Enlève le slot utilisé
-            return slotPosition;
-        }
-        return Vector3.zero; // Si pas de slot disponible
-    }
-
     public void UpgradeToLargeShip()
     {
-        // Vérifier si le joueur a assez de petits vaisseaux pour l'amélioration
         if (smallShips.Count >= 2)
         {
-            // Vérifier que tous les vaisseaux appartiennent au joueur actif
             Player currentPlayer = GameManager.Instance.GetCurrentPlayer();
             bool allShipsBelongToPlayer = true;
 
@@ -157,7 +145,6 @@ public class PlayerActions : MonoBehaviour
 
             if (allShipsBelongToPlayer)
             {
-                // Vérifier que les vaisseaux sont bien sur la même planète
                 GameObject planet = smallShips[0].GetComponent<Ship>().shipSelection.currentPlanet;
                 bool samePlanet = true;
 
@@ -172,20 +159,30 @@ public class PlayerActions : MonoBehaviour
 
                 if (samePlanet)
                 {
-                    // Effectuer l'amélioration si toutes les conditions sont remplies
                     currentPlayer.shipCount -= 2;
                     currentPlayer.largeShipCount++;
 
                     Destroy(smallShips[0]);
                     smallShips.RemoveAt(0);
+
                     Destroy(smallShips[0]);
                     smallShips.RemoveAt(0);
 
-                    Vector3 spawnPosition = GetPlanetPosition(currentPlayer.startingPlanetId) + new Vector3(0, 0, -1);
-                    GameObject newLargeShip = Instantiate(largeShipPrefab, spawnPosition, Quaternion.identity);
-                    newLargeShip.GetComponent<Ship>().owner = currentPlayer; // Lier le grand vaisseau au joueur actif
-                    largeShips.Add(newLargeShip);
-                    GameManager.Instance.ActionTaken();
+                    Planet startingPlanet = GameManager.Instance.GetPlayerStartingPlanet(currentPlayer);
+                    if (startingPlanet != null)
+                    {
+                        Vector3 spawnPosition = startingPlanet.GetNextFreeSlot();
+                        GameObject newLargeShip = Instantiate(largeShipPrefab, spawnPosition, Quaternion.identity);
+                        newLargeShip.GetComponent<Ship>().owner = currentPlayer;
+                        largeShips.Add(newLargeShip);
+
+                        startingPlanet.AddShipToSlot(newLargeShip); // Ajouter dans le slot disponible
+                        GameManager.Instance.ActionTaken();
+                    }
+                    else
+                    {
+                        Debug.Log("Planète de départ introuvable pour le joueur.");
+                    }
                 }
                 else
                 {
@@ -203,6 +200,18 @@ public class PlayerActions : MonoBehaviour
         }
     }
 
+    // Méthode pour récupérer le prochain slot libre sur la planète
+    private Vector3 GetNextFreeSlot(int planetId)
+    {
+        if (planetSlots.ContainsKey(planetId) && planetSlots[planetId].Count > 0)
+        {
+            Vector3 slotPosition = planetSlots[planetId][0];
+            planetSlots[planetId].RemoveAt(0); // Enlève le slot utilisé
+            return slotPosition;
+        }
+        return Vector3.zero; // Si pas de slot disponible
+    }
+
     public void UpdateUpgradeButtons()
     {
         Player currentPlayer = GameManager.Instance.GetCurrentPlayer();
@@ -215,14 +224,67 @@ public class PlayerActions : MonoBehaviour
 
     public void UpgradeToTower()
     {
-        if (player.largeShipCount >= 2)
+        Player currentPlayer = GameManager.Instance.GetCurrentPlayer(); // Récupérer le joueur actif
+
+        if (currentPlayer.largeShipCount >= 2)
         {
-            player.largeShipCount -= 2;
-            Destroy(largeShips[0]);
-            largeShips.RemoveAt(0);
-            Destroy(largeShips[0]);
-            largeShips.RemoveAt(0);
-            Instantiate(towerPrefab, GetPlanetPosition(player.startingPlanetId) + new Vector3(0, 0, -1), Quaternion.identity);
+            if (largeShips.Count < 2)
+            {
+                Debug.Log("Pas assez de gros vaisseaux pour coloniser.");
+                return;
+            }
+
+            // Vérifier que les deux vaisseaux sont sur la même planète
+            GameObject firstShipPlanet = largeShips[0].GetComponent<Ship>().shipSelection.currentPlanet;
+            bool samePlanet = true;
+
+            foreach (GameObject ship in largeShips)
+            {
+                if (ship.GetComponent<Ship>().shipSelection.currentPlanet != firstShipPlanet)
+                {
+                    samePlanet = false;
+                    break;
+                }
+            }
+
+            if (samePlanet)
+            {
+                // Réduire le nombre de gros vaisseaux du joueur
+                currentPlayer.largeShipCount -= 2;
+
+                // Détruire les deux vaisseaux utilisés pour la colonisation
+                Destroy(largeShips[0]);
+                largeShips.RemoveAt(0);
+                Destroy(largeShips[0]);
+                largeShips.RemoveAt(0);
+
+                // Récupérer la planète sur laquelle la colonisation est effectuée
+                Planet currentPlanet = firstShipPlanet != null ? firstShipPlanet.GetComponent<Planet>() : null;
+
+                if (currentPlanet != null)
+                {
+                    // Coloniser la planète
+                    currentPlanet.ColonizePlanet();
+
+                    // Associer la planète au joueur actif
+                    currentPlanet.player = currentPlayer;
+                    currentPlanet.isColonized = true;
+
+                    // Ajouter les points de colonisation au joueur
+                    currentPlayer.AddPoints(currentPlanet.colonizationPoints);
+
+                    Debug.Log("La planète a été colonisée avec succès par le joueur " + currentPlayer.name);
+                    GameManager.Instance.ActionTaken();
+                }
+                else
+                {
+                    Debug.Log("Planète non trouvée pour la colonisation.");
+                }
+            }
+            else
+            {
+                Debug.Log("Les deux gros vaisseaux doivent être sur la même planète pour coloniser.");
+            }
         }
         else
         {

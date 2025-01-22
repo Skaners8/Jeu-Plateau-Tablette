@@ -38,7 +38,6 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -293,7 +292,6 @@ MonoBehaviour:
   - {fileID: 135325692}
   slotOccupied: 
   player: {fileID: 0}
-  playerActions: {fileID: 0}
   shipSelection: {fileID: 1479114341}
   hasAddedPoints: 0
   undiscoveredSprite: {fileID: 21300000, guid: ee49d1d1fa2388a4b9cf787e88318f52, type: 3}
@@ -721,7 +719,6 @@ MonoBehaviour:
   - {fileID: 1596511753}
   slotOccupied: 
   player: {fileID: 0}
-  playerActions: {fileID: 0}
   shipSelection: {fileID: 1479114341}
   hasAddedPoints: 0
   undiscoveredSprite: {fileID: 21300000, guid: ee49d1d1fa2388a4b9cf787e88318f52, type: 3}
@@ -995,7 +992,6 @@ MonoBehaviour:
   - {fileID: 1209650111}
   slotOccupied: 
   player: {fileID: 0}
-  playerActions: {fileID: 0}
   shipSelection: {fileID: 1479114341}
   hasAddedPoints: 0
   undiscoveredSprite: {fileID: 21300000, guid: ee49d1d1fa2388a4b9cf787e88318f52, type: 3}
@@ -1249,6 +1245,85 @@ CanvasRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 287285612}
+  m_CullTransparentMesh: 1
+--- !u!1 &331931862
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 331931863}
+  - component: {fileID: 331931865}
+  - component: {fileID: 331931864}
+  m_Layer: 5
+  m_Name: TestScore
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &331931863
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 331931862}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1991217151}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 123.7446, y: -587}
+  m_SizeDelta: {x: 716.0474, y: 141.95}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &331931864
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 331931862}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_FontData:
+    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_FontSize: 50
+    m_FontStyle: 0
+    m_BestFit: 0
+    m_MinSize: 5
+    m_MaxSize: 50
+    m_Alignment: 0
+    m_AlignByGeometry: 0
+    m_RichText: 1
+    m_HorizontalOverflow: 0
+    m_VerticalOverflow: 0
+    m_LineSpacing: 1
+  m_Text: New Text
+--- !u!222 &331931865
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 331931862}
   m_CullTransparentMesh: 1
 --- !u!1 &351234050
 GameObject:
@@ -2105,7 +2180,6 @@ MonoBehaviour:
   - {fileID: 1142907045}
   slotOccupied: 
   player: {fileID: 0}
-  playerActions: {fileID: 0}
   shipSelection: {fileID: 1479114341}
   hasAddedPoints: 0
   undiscoveredSprite: {fileID: 21300000, guid: ee49d1d1fa2388a4b9cf787e88318f52, type: 3}
@@ -2456,7 +2530,6 @@ MonoBehaviour:
   - {fileID: 538544266}
   slotOccupied: 
   player: {fileID: 0}
-  playerActions: {fileID: 0}
   shipSelection: {fileID: 1479114341}
   hasAddedPoints: 0
   undiscoveredSprite: {fileID: 21300000, guid: ee49d1d1fa2388a4b9cf787e88318f52, type: 3}
@@ -3455,7 +3528,6 @@ MonoBehaviour:
   - {fileID: 24502088}
   slotOccupied: 
   player: {fileID: 0}
-  playerActions: {fileID: 0}
   shipSelection: {fileID: 1479114341}
   hasAddedPoints: 0
   undiscoveredSprite: {fileID: 21300000, guid: ee49d1d1fa2388a4b9cf787e88318f52, type: 3}
@@ -3615,7 +3687,6 @@ MonoBehaviour:
   - {fileID: 991049484}
   slotOccupied: 
   player: {fileID: 0}
-  playerActions: {fileID: 0}
   shipSelection: {fileID: 1479114341}
   hasAddedPoints: 0
   undiscoveredSprite: {fileID: 21300000, guid: ee49d1d1fa2388a4b9cf787e88318f52, type: 3}
@@ -3918,6 +3989,7 @@ MonoBehaviour:
   testFood: {fileID: 1375650770}
   testShip: {fileID: 710282020}
   testBigShip: {fileID: 365598233}
+  testScore: {fileID: 331931864}
 --- !u!1 &1277635261
 GameObject:
   m_ObjectHideFlags: 0
@@ -4228,7 +4300,6 @@ MonoBehaviour:
   - {fileID: 548979877}
   slotOccupied: 
   player: {fileID: 0}
-  playerActions: {fileID: 0}
   shipSelection: {fileID: 1479114341}
   hasAddedPoints: 0
   undiscoveredSprite: {fileID: 21300000, guid: ee49d1d1fa2388a4b9cf787e88318f52, type: 3}
@@ -4388,7 +4459,6 @@ MonoBehaviour:
   - {fileID: 503474838}
   slotOccupied: 
   player: {fileID: 0}
-  playerActions: {fileID: 0}
   shipSelection: {fileID: 1479114341}
   hasAddedPoints: 0
   undiscoveredSprite: {fileID: 21300000, guid: ee49d1d1fa2388a4b9cf787e88318f52, type: 3}
@@ -4600,7 +4670,6 @@ MonoBehaviour:
   - {fileID: 1460277436}
   slotOccupied: 
   player: {fileID: 0}
-  playerActions: {fileID: 0}
   shipSelection: {fileID: 1479114341}
   hasAddedPoints: 0
   undiscoveredSprite: {fileID: 21300000, guid: ee49d1d1fa2388a4b9cf787e88318f52, type: 3}
@@ -6201,7 +6270,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1864736221
 RectTransform:
   m_ObjectHideFlags: 0
@@ -6614,6 +6683,7 @@ RectTransform:
   - {fileID: 1375650769}
   - {fileID: 710282019}
   - {fileID: 365598232}
+  - {fileID: 331931863}
   - {fileID: 1864736221}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
