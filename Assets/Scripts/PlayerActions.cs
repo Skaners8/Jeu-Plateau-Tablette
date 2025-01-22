@@ -11,16 +11,15 @@ public class PlayerActions : MonoBehaviour
     public GameObject normalShipPrefab;
     public GameObject largeShipPrefab;
     public GameObject towerPrefab;
+
+    public GameObject[] normalShipPrefabsPerPlayer;
+    public GameObject[] largeShipPrefabsPerPlayer;
+
     private List<GameObject> smallShips = new List<GameObject>();
     private List<GameObject> largeShips = new List<GameObject>();
     public ShipSelection shipSelection;
     private GameManager gameManager;
 
-    public Text testMinerais;
-    public Text testFood;
-    public Text testShip;
-    public Text testBigShip;
-    public Text testScore;
 
     // Nouveau : Dictionnaire pour suivre les slots libres sur chaque planète
     private Dictionary<int, List<Vector3>> planetSlots = new Dictionary<int, List<Vector3>>();
@@ -58,11 +57,6 @@ public class PlayerActions : MonoBehaviour
     {
         // Obtenir le joueur actuel + mettre à jour ses informations
         Player currentPlayer = GameManager.Instance.GetCurrentPlayer(); // récupère le joueur actuel
-        testMinerais.text = "Minerals: " + currentPlayer.minerals.ToString(); // Met à jour un texte avec la valeur des variables de chaque joueur
-        testFood.text = "Nourriture: " + currentPlayer.food.ToString();
-        testShip.text = "Vaisseaux: " + currentPlayer.shipCount.ToString();
-        testBigShip.text = "Gros Vaisseaux: " + currentPlayer.largeShipCount.ToString();
-        testScore.text = "Score: " + currentPlayer.points.ToString();
 
         if (currentPlayer.shipCount < 2)
         {
@@ -73,7 +67,7 @@ public class PlayerActions : MonoBehaviour
             UpdateUpgradeButtons();
         }
 
-        player = gameManager.GetCurrentPlayer(); // On obtient le joueur actuel via GameManager
+        player = currentPlayer; // On obtient le joueur actuel via GameManager
 
         if (gameManager.isPlayerTurn)
         {
@@ -94,31 +88,40 @@ public class PlayerActions : MonoBehaviour
 
     public void CreateNormalShip()
     {
-        Player currentPlayer = GameManager.Instance.GetCurrentPlayer();
+        Player currentPlayer = gameManager.GetCurrentPlayer();
 
-        if (currentPlayer.minerals < 3 && currentPlayer.food < 3)
+        if (currentPlayer.minerals < 3 || currentPlayer.food < 3)
         {
             Debug.Log("Pas assez de ressources pour créer un vaisseau.");
             return;
         }
 
-        // Créer le vaisseau à la position définie
-        GameObject ship = Instantiate(normalShipPrefab);
+        // Sélectionner le prefab selon le joueur actuel
+        GameObject shipPrefab = normalShipPrefabsPerPlayer[currentPlayer.playerID];  // Utiliser le prefab en fonction de l'ID du joueur
 
-        // Assigner le vaisseau au joueur et le placer sur la planète de départ
-        Planet startingPlanet = GameManager.Instance.GetPlayerStartingPlanet(currentPlayer);
+        // Créer le vaisseau à la position définie
+        GameObject ship = Instantiate(shipPrefab);
+
+        Planet startingPlanet = gameManager.GetPlayerStartingPlanet(currentPlayer);
 
         if (startingPlanet != null)
         {
-            startingPlanet.AddShipToSlot(ship); // Ajouter le vaisseau dans un slot libre
-            ship.GetComponent<Ship>().owner = currentPlayer; // Lier le vaisseau au joueur actif
+            // Placer le vaisseau sur la planète et l'ajouter à un slot libre
+            startingPlanet.AddShipToSlot(ship);
+            
+            // IMPORTANT : S'assurer que le propriétaire est bien défini
+            Ship shipComponent = ship.GetComponent<Ship>();
+            shipComponent.owner = currentPlayer; // Assigner le joueur en tant que propriétaire
+
+            // Ajouter le vaisseau à la liste des petits vaisseaux
             smallShips.Add(ship);
+            
+            // Mettre à jour les ressources du joueur
             currentPlayer.shipCount++;
             currentPlayer.minerals -= 3;
             currentPlayer.food -= 3;
 
-            // Action terminée, donc informer le GameManager
-            GameManager.Instance.ActionTaken();
+            gameManager.ActionTaken(); // Signaler que le joueur a pris une action
         }
         else
         {
@@ -130,9 +133,10 @@ public class PlayerActions : MonoBehaviour
     {
         if (smallShips.Count >= 2)
         {
-            Player currentPlayer = GameManager.Instance.GetCurrentPlayer();
+            Player currentPlayer = gameManager.GetCurrentPlayer();
             bool allShipsBelongToPlayer = true;
 
+            // Vérifier que tous les petits vaisseaux appartiennent bien au joueur
             foreach (GameObject ship in smallShips)
             {
                 Ship shipComponent = ship.GetComponent<Ship>();
@@ -142,6 +146,7 @@ public class PlayerActions : MonoBehaviour
                     break;
                 }
             }
+            allShipsBelongToPlayer = true;
 
             if (allShipsBelongToPlayer)
             {
@@ -159,6 +164,7 @@ public class PlayerActions : MonoBehaviour
 
                 if (samePlanet)
                 {
+                    // Consommer les petits vaisseaux et créer un grand vaisseau
                     currentPlayer.shipCount -= 2;
                     currentPlayer.largeShipCount++;
 
@@ -168,16 +174,23 @@ public class PlayerActions : MonoBehaviour
                     Destroy(smallShips[0]);
                     smallShips.RemoveAt(0);
 
-                    Planet startingPlanet = GameManager.Instance.GetPlayerStartingPlanet(currentPlayer);
+                    Planet startingPlanet = gameManager.GetPlayerStartingPlanet(currentPlayer);
                     if (startingPlanet != null)
                     {
                         Vector3 spawnPosition = startingPlanet.GetNextFreeSlot();
+
+                        // Sélectionner le prefab de grand vaisseau selon le joueur actuel
+                        GameObject largeShipPrefab = largeShipPrefabsPerPlayer[currentPlayer.playerID];
                         GameObject newLargeShip = Instantiate(largeShipPrefab, spawnPosition, Quaternion.identity);
-                        newLargeShip.GetComponent<Ship>().owner = currentPlayer;
+
+                        // Assigner correctement le propriétaire au grand vaisseau
+                        Ship largeShipComponent = newLargeShip.GetComponent<Ship>();
+                        largeShipComponent.owner = currentPlayer; // Définir le propriétaire du grand vaisseau
+
                         largeShips.Add(newLargeShip);
 
-                        startingPlanet.AddShipToSlot(newLargeShip); // Ajouter dans le slot disponible
-                        GameManager.Instance.ActionTaken();
+                        startingPlanet.AddShipToSlot(newLargeShip);
+                        gameManager.ActionTaken();
                     }
                     else
                     {

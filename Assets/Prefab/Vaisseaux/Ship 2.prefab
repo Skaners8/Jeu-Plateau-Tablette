@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 9043637751933150421}
   - component: {fileID: 3312746891933902940}
   m_Layer: 3
-  m_Name: Ship
+  m_Name: Ship 2
   m_TagString: Ship
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -29,7 +29,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 50, y: -0.01, z: -15}
-  m_LocalScale: {x: 0.2924, y: 0.2924, z: 0.2924}
+  m_LocalScale: {x: 0.28, y: 0.28, z: 0.2924}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -75,7 +75,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 297bdc9ac9bd7d248b0bab2259a02fe5, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 91706194abad8e045a3e8bc6fa6e7fc2, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -119,5 +119,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cf821ff68fe6447459534c76b2edb351, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  owner: {fileID: 0}
   isLargeShip: 0
   actionPoints: 1

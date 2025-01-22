@@ -1061,7 +1061,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 69b3b7c462cffd14dae7f4d8fc66c745, type: 3}
+  m_Sprite: {fileID: 21300000, guid: c9a7b2cdfeb89494b8b2b160a32e45f6, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1609,8 +1609,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   newGameButton: {fileID: 1567089157}
-  loadGameButton: {fileID: 0}
-  quitGameButton: {fileID: 0}
   mainMenu: {fileID: 503747894}
 --- !u!4 &1972372811
 Transform:

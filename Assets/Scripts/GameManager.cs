@@ -16,17 +16,15 @@ public class GameManager : MonoBehaviour
     public bool isPlayerTurn = true;
     public List<Planet> planets; // Liste des planètes disponibles dans la scène
 
-    public Text turnText;
     public Text roundText;
     public Button endTurnButton;
+    public Image endTurnButtonImage;
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
     public ResourceHUD resourceHUD; // Référence au ResourceHUD
+    public Sprite[] playerSprites;
 
-=======
-=======
->>>>>>> Stashed changes
+    public Sprite[] colonizedPlanetSprites;
+
     //Fin du jeu
     public GameObject endGamePanel;
     public Text winnerText;
@@ -42,10 +40,7 @@ public class GameManager : MonoBehaviour
     public Button quitPauseButton;
     public Button pauseButton;
     private bool isPaused = false;
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+
 
     private void Awake()
     {
@@ -67,8 +62,6 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
         if (resourceHUD == null)
         {
             resourceHUD = FindObjectOfType<ResourceHUD>();
@@ -77,14 +70,6 @@ public class GameManager : MonoBehaviour
                 Debug.LogError("ResourceHUD introuvable dans la scène.");
             }
         }
-=======
-        endGamePanel.SetActive(false);
-        pausePanel.SetActive(false);
->>>>>>> Stashed changes
-=======
-        endGamePanel.SetActive(false);
-        pausePanel.SetActive(false);
->>>>>>> Stashed changes
         currentTurn = 0;
         currentRound = 1;
 
@@ -128,6 +113,24 @@ public class GameManager : MonoBehaviour
         pauseButton.onClick.AddListener(PauseGame);
 
         StartNewRound();
+
+        // Assurez-vous que le tableau des sprites est bien rempli
+        if (playerSprites.Length != players.Count)
+        {
+            Debug.LogError("Le nombre de sprites ne correspond pas au nombre de joueurs.");
+        }
+    }
+
+    private void UpdateEndTurnButtonImage()
+    {
+        if (endTurnButtonImage != null && playerSprites.Length > currentPlayerIndex)
+        {
+            endTurnButtonImage.sprite = playerSprites[currentPlayerIndex];
+        }
+        else
+        {
+            Debug.LogError("Image ou tableau de sprites invalide.");
+        }
     }
 
     public void StartNewRound()
@@ -148,7 +151,6 @@ public class GameManager : MonoBehaviour
     {
         actionsTaken = 0;
         isPlayerTurn = true;
-        UpdateTurnText();
 
         // Ensure ResourceHUD is initialized and update bars
         if (resourceHUD == null)
@@ -162,6 +164,7 @@ public class GameManager : MonoBehaviour
         }
 
         resourceHUD.UpdateBarsForCurrentPlayer();
+        UpdateEndTurnButtonImage();
     }
 
 
@@ -193,21 +196,9 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void UpdateTurnText()
-    {
-        if (players != null && players.Count > 0 && currentPlayerIndex >= 0 && currentPlayerIndex < players.Count)
-        {
-            turnText.text = players[currentPlayerIndex].playerName;
-        }
-        else
-        {
-            Debug.LogError("Impossible de mettre à jour le texte du tour : Index ou liste des joueurs invalide.");
-        }
-    }
-
     private void DisplayRoundEndText()
     {
-        roundText.text = "Manche " + currentRound;
+        roundText.text = "" + currentRound;
     }
 
     public void AssignPlanetsToPlayers()
@@ -235,6 +226,18 @@ public class GameManager : MonoBehaviour
             selectedPlanet.isDiscovered = true;
             selectedPlanet.isColonized = true;
             player.startingPlanetId = selectedPlanet.GetInstanceID();  // Assigner l'ID de la planète au joueur
+
+            // Changer le sprite de la planète en fonction du joueur
+            if (player.playerID >= 0 && player.playerID < colonizedPlanetSprites.Length)
+            {
+                selectedPlanet.GetComponent<SpriteRenderer>().sprite = colonizedPlanetSprites[player.playerID]; // Changer le sprite de la planète
+            }
+            else
+            {
+                Debug.LogWarning($"ID du joueur {player.playerID} hors des limites du tableau de sprites. Utilisation d'un sprite par défaut.");
+                // Utiliser un sprite par défaut si l'ID du joueur est hors des limites
+                selectedPlanet.GetComponent<SpriteRenderer>().sprite = colonizedPlanetSprites[0]; // Utilisation d'un sprite par défaut
+            }
 
             // Empêcher l'ajout de points pour la planète de départ
             selectedPlanet.hasAddedPoints = true;  // Empêche l'ajout des points pour la planète de départ

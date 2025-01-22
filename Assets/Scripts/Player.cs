@@ -6,6 +6,7 @@ public class Player : MonoBehaviour
 {
     public string playerName;
     public int playerID;
+    
     public int minerals;            // Quantité de minerais
     public int food;                // Quantité de nourriture
     public int shipCount;           // Nombre de petits vaisseaux
